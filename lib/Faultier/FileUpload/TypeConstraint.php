@@ -1,9 +1,9 @@
 <?php
 
-	namespace Faultier\FileUploader;
+	namespace Faultier\FileUpload;
 	
-	use Faultier\FileUploader\Constraint;
-	use Faultier\FileUploader\File;
+	use Faultier\FileUpload\Constraint;
+	use Faultier\FileUpload\File;
 	
 	class SizeConstraint extends Constraint {
 	

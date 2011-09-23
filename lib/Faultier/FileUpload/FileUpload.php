@@ -1,12 +1,12 @@
 <?php
 
-	namespace Faultier\FileUploader;
+	namespace Faultier\FileUpload;
 	
-	use Faultier\FileUploader\File;
-	use Faultier\FileUploader\ConstraintInterface;
-	use Faultier\FileUploader\FileUploaderException;
+	use Faultier\FileUpload\File;
+	use Faultier\FileUpload\ConstraintInterface;
+	use Faultier\FileUpload\FileUploadException;
 	
-	class FileUploader {
+	class FileUpload {
 	
 		private $uploadDirectory;
 		private $files;
@@ -132,7 +132,7 @@
 		}
 		
 		public function getReadableAggregatedFileSize() {
-			return Faultier\FileUploader\Utilities::makeHumanReadableSize($this->getAggregatedFileSize());
+			return Faultier\FileUpload\Utilities::makeHumanReadableSize($this->getAggregatedFileSize());
 		}
 		
 		# pragma mark parsing
@@ -165,7 +165,7 @@
 			
 			$files = array();
 			
-			for ($i = 0; $i < FileUploader::NUMBER_OF_PHP_FILE_INFORMATION; $i++) { 
+			for ($i = 0; $i < FileUpload::NUMBER_OF_PHP_FILE_INFORMATION; $i++) { 
 				
 				$file = new File();
 				$file->setOriginalName($uploadedFile['name'][$i]);
@@ -261,7 +261,7 @@
 			// file has upload errors
 			if ($file->getErrorCode() != ERR_UPLOAD_OK) {
 				$file->setUploaded(false);
-				return false;;
+				return false;
 			}
 			
 			// check and set upload directory

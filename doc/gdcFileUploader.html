@@ -39,12 +39,12 @@ div.methodDetail p.returns_throws { font-size: .9em; }
 div.copyright { font-size: .8em; margin-top: 60px; }		</style>
 		
 		
-		<title>gdcFileUploader Documentation - gdcFileUploader</title>
+		<title>gdcFileUpload Documentation - gdcFileUpload</title>
 		
 	</head>
 	<body id="body">
 	
-		<h1>gdcFileUploader Documentation</h1>
+		<h1>gdcFileUpload Documentation</h1>
 		
 		
 		<table class="allClasses">
@@ -52,23 +52,23 @@ div.copyright { font-size: .8em; margin-top: 60px; }		</style>
 		<td>All Classes</td>
 	</tr>
 		<tr>
-		<td class="className"><a href="gdcFileUploader.html">gdcFileUploader</a></td>
-		<td>gdcFileUploader handles uploading of files submitted via a HTML form
+		<td class="className"><a href="gdcFileUpload.html">gdcFileUpload</a></td>
+		<td>gdcFileUpload handles uploading of files submitted via a HTML form
 </td>
 	</tr>
 		<tr>
-		<td class="className"><a href="gdcFileUploaderFile.html">gdcFileUploaderFile</a></td>
-		<td>gdcFileUploaderFile stores information about an uploaded file
+		<td class="className"><a href="gdcFileUploadFile.html">gdcFileUploadFile</a></td>
+		<td>gdcFileUploadFile stores information about an uploaded file
 </td>
 	</tr>
 		<tr>
-		<td class="className"><a href="gdcFileUploaderCriteria.html">gdcFileUploaderCriteria</a></td>
-		<td>gdcFileUploaderCriteria stores criteria for file uploading
+		<td class="className"><a href="gdcFileUploadCriteria.html">gdcFileUploadCriteria</a></td>
+		<td>gdcFileUploadCriteria stores criteria for file uploading
 </td>
 	</tr>
 		<tr>
-		<td class="className"><a href="gdcFileUploaderException.html">gdcFileUploaderException</a></td>
-		<td>gdcFileUploaderException is thrown by gdcFileUploader
+		<td class="className"><a href="gdcFileUploadException.html">gdcFileUploadException</a></td>
+		<td>gdcFileUploadException is thrown by gdcFileUpload
 </td>
 	</tr>
 	</table><!--
@@ -78,7 +78,7 @@ TODO:
 -->
 
 <p class="classDescription">
-	gdcFileUploader handles uploading of files submitted via a HTML form
+	gdcFileUpload handles uploading of files submitted via a HTML form
 </p>
 
 <table>
@@ -112,7 +112,7 @@ TODO:
 	</tr>
 	<tr class="odd">
 		<td class="code"><a href="#getCriteria"><code>getCriteria()</code></a></td>
-		<td>Returns the gdcFileUploaderCriteria instance
+		<td>Returns the gdcFileUploadCriteria instance
 </td>
 	</tr>
 	<tr class="odd">
@@ -147,7 +147,7 @@ TODO:
 	</tr>
 	<tr class="odd">
 		<td class="code"><a href="#getFile"><code>getFile()</code></a></td>
-		<td>Returns a gdcFileUploaderFile instance or false
+		<td>Returns a gdcFileUploadFile instance or false
 </td>
 	</tr>
 	<tr class="odd">
@@ -231,7 +231,7 @@ TODO:
 <div class="methodDetail">
 	<a id="saveFile"></a>
 	<h2>
-		<code>(mixed)<strong>saveFile</strong>([gdcFileUploaderFile $file = null], [string $fileName = null], [string $uploadDir = null])</code>
+		<code>(mixed)<strong>saveFile</strong>([gdcFileUploadFile $file = null], [string $fileName = null], [string $uploadDir = null])</code>
 	</h2>
 
 	<p class="methodDescription">
@@ -259,7 +259,7 @@ TODO:
 		</tr>
 				<tr class="odd">
 			<td class="code"><code>$file</code></td>
-			<td>A gdcFileUploaderFile instance; leave empty if only one file was uploaded</td>
+			<td>A gdcFileUploadFile instance; leave empty if only one file was uploaded</td>
 		</tr>
 				<tr class="odd">
 			<td class="code"><code>$fileName</code></td>
@@ -275,7 +275,7 @@ TODO:
 		<strong>returns</strong> (mixed)  (string) the file name, if success, otherwise (bool) false	</p>
 		
 		<p class="returns_throws">
-		<strong>throws</strong> (gdcFileUploaderException) gdcFileUploaderException	</p>
+		<strong>throws</strong> (gdcFileUploadException) gdcFileUploadException	</p>
 	</div>
 <div class="methodDetail">
 	<a id="saveAllFiles"></a>
@@ -320,12 +320,12 @@ TODO:
 		<strong>returns</strong> (bool)  true, if there were no errors, otherwise false	</p>
 		
 		<p class="returns_throws">
-		<strong>throws</strong> (gdcFileUploaderException) gdcFileUploaderException	</p>
+		<strong>throws</strong> (gdcFileUploadException) gdcFileUploadException	</p>
 	</div>
 <div class="methodDetail">
 	<a id="addCriteria"></a>
 	<h2>
-		<code>(gdcFileUploaderCriteria)<strong>addCriteria</strong>([string $settings = null])</code>
+		<code>(gdcFileUploadCriteria)<strong>addCriteria</strong>([string $settings = null])</code>
 	</h2>
 
 	<p class="methodDescription">
@@ -333,7 +333,7 @@ TODO:
 	</p>
 	
 		<p class="returns_throws">
-		<strong>see</strong> gdcFileUploaderCriteria::addByString()	</p>
+		<strong>see</strong> gdcFileUploadCriteria::addByString()	</p>
 		
 	<!--
 	<p>
@@ -360,13 +360,13 @@ TODO:
 			</table>
 	
 		<p class="returns_throws">
-		<strong>returns</strong> (gdcFileUploaderCriteria)  The gdcFileUploaderCriteria instance	</p>
+		<strong>returns</strong> (gdcFileUploadCriteria)  The gdcFileUploadCriteria instance	</p>
 		
 	</div>
 <div class="methodDetail">
 	<a id="removeCriteria"></a>
 	<h2>
-		<code>(gdcFileUploaderCriteria)<strong>removeCriteria</strong>()</code>
+		<code>(gdcFileUploadCriteria)<strong>removeCriteria</strong>()</code>
 	</h2>
 
 	<p class="methodDescription">
@@ -390,17 +390,17 @@ TODO:
 	
 	
 		<p class="returns_throws">
-		<strong>returns</strong> (gdcFileUploaderCriteria)  The gdcFileUploaderCriteria instance	</p>
+		<strong>returns</strong> (gdcFileUploadCriteria)  The gdcFileUploadCriteria instance	</p>
 		
 	</div>
 <div class="methodDetail">
 	<a id="getCriteria"></a>
 	<h2>
-		<code>(gdcFileUploaderCriteria)<strong>getCriteria</strong>()</code>
+		<code>(gdcFileUploadCriteria)<strong>getCriteria</strong>()</code>
 	</h2>
 
 	<p class="methodDescription">
-		Returns the gdcFileUploaderCriteria instance
+		Returns the gdcFileUploadCriteria instance
 	</p>
 	
 		
@@ -420,7 +420,7 @@ TODO:
 	
 	
 		<p class="returns_throws">
-		<strong>returns</strong> (gdcFileUploaderCriteria)  The gdcFileUploaderCriteria instance	</p>
+		<strong>returns</strong> (gdcFileUploadCriteria)  The gdcFileUploadCriteria instance	</p>
 		
 	</div>
 <div class="methodDetail">
@@ -570,7 +570,7 @@ TODO:
 	</p>
 	
 		<p class="returns_throws">
-		<strong>see</strong> gdcFileUploader::makeBytesReadable()	</p>
+		<strong>see</strong> gdcFileUpload::makeBytesReadable()	</p>
 		
 	<!--
 	<p>
@@ -636,7 +636,7 @@ TODO:
 			</table>
 	
 		<p class="returns_throws">
-		<strong>returns</strong> (array)  An array containing gdcFileUploaderFile instances	</p>
+		<strong>returns</strong> (array)  An array containing gdcFileUploadFile instances	</p>
 		
 	</div>
 <div class="methodDetail">
@@ -646,7 +646,7 @@ TODO:
 	</h2>
 
 	<p class="methodDescription">
-		Returns a gdcFileUploaderFile instance or false
+		Returns a gdcFileUploadFile instance or false
 	</p>
 	
 		
@@ -675,7 +675,7 @@ TODO:
 			</table>
 	
 		<p class="returns_throws">
-		<strong>returns</strong> (mixed)  gdcFileUploaderFile instance, otherwise (bool) false	</p>
+		<strong>returns</strong> (mixed)  gdcFileUploadFile instance, otherwise (bool) false	</p>
 		
 	</div>
 <div class="methodDetail">
@@ -705,7 +705,7 @@ TODO:
 	
 	
 		<p class="returns_throws">
-		<strong>returns</strong> (array)  Array containing gdcFileUploaderFile instances	</p>
+		<strong>returns</strong> (array)  Array containing gdcFileUploadFile instances	</p>
 		
 	</div>
 <div class="methodDetail">

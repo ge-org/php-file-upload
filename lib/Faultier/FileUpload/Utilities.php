@@ -1,6 +1,6 @@
 <?php
 
-	namespace Faultier\FileUploader;
+	namespace Faultier\FileUpload;
 	
 	class Utilities {
 	

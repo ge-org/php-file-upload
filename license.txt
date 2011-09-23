@@ -1,4 +1,4 @@
-gdcFileUploader is a PHP5 class library that offers a very easy, yet very powerful way to handle uploading of files submitted via a HTML form.
+gdcFileUpload is a PHP5 class library that offers a very easy, yet very powerful way to handle uploading of files submitted via a HTML form.
 
 Copyright (C) 2009 Georg Dresler <georg@g-dresler.de>
 

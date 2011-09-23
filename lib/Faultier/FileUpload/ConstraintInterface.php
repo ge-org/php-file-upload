@@ -1,8 +1,8 @@
 <?php
 
-	namespace Faultier\FileUploader;
+	namespace Faultier\FileUpload;
 	
-	use Faultier\FileUploader\File;
+	use Faultier\FileUpload\File;
 	
 	interface ConstraintInterface {
 	

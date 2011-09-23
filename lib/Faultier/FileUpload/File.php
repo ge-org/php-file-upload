@@ -1,6 +1,6 @@
 <?php
 
-	namespace Faultier\FileUploader;
+	namespace Faultier\FileUpload;
 	
 	class File {
 	
@@ -64,7 +64,7 @@
 		}
 		
 		public function getHumanReadableSize() {
-			return Faultier\FileUploader\Utilities::makeHumanReadableSize($this->size);
+			return Faultier\FileUpload\Utilities::makeHumanReadableSize($this->size);
 		}
 		
 		public function setErrorCode($code) {
