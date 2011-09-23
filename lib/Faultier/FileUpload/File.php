@@ -13,7 +13,6 @@
 		private $errorCode = null;
 		private $isUploaded = false;
 		private $filePath = null;
-		private $brokenConstraints = array();
 		
 		public function setName($name) {
 			$this->name = $name;
@@ -133,15 +132,7 @@
 			return $this->filePath;
 		}
 		
-		public function setBrokenConstraints(array $constraints) {
-			$this->brokenConstraints = $constraints;
-		}
-		
-		public function getBrokenConstraints() {
-			return $this->brokenConstraints;
-		}
-		
-		public function getSuffix() {
+		public function getExtension() {
 			return pathinfo($this->getName(), PATHINFO_EXTENSION);
 		}
 	}

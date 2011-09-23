@@ -12,10 +12,12 @@
 		private $files;
 		private $constraints;
 		private $isMultiFileUpload;
+		private $errorClosure;
+		private $errorConstraintClosure;
 		
 		const NUMBER_OF_PHP_FILE_INFORMATION = 5;
 		
-		public function __construct($uploadDirectory, $constraints) {
+		public function __construct($uploadDirectory, array $constraints = array()) {
 			$this->setUploadDirectory($uploadDirectory);
 			$this->setConstraints($constraints);
 			
@@ -50,12 +52,31 @@
 			return count($this->getFiles()) > 0;
 		}
 		
-		public function setConstraints($constraints) {
+		public function setConstraints(array $constraints) {
 		
-			if (!is_array($constraints)) {
-				$this->constraints = $this->parseConstraintString($constraints);
-			} else {
-				$this->constraints = $constraints;
+			foreach ($constraints as $type => $options) {
+				
+				// an object has been given instead of an options string
+				if (is_object($options)) {
+					$clazz = new ReflectionClass($options);
+					if ($clazz->implementsInterface('ConstraintInterface')) {
+						$this->addConstraint($options);
+					}
+				}
+				
+				// type and options string given
+				else {
+					try {
+						$clazz = new ReflectionClass(ucfirst($type).'Constraint');
+						$constraint = $clazz->newInstance();
+					} catch (\LogicException $e) {
+						throw new \InvalidArgumentException(sprintf('The constraint type "%s" does not exist', $type));
+					}
+					
+					$constraint->parse($options);
+					$this->addConstraint($constraint);
+				}
+				
 			}
 		}
 		
@@ -72,30 +93,6 @@
 		}
 		
 		# pragma mark extended getters
-		
-		public function getFilesWithErrors() {
-			
-			$filesWithErrors = array();
-			foreach ($this->getFiles() as $file) {
-				if ($file->getErrorCode() != UPLOAD_ERR_OK) {
-					$filesWithErrors[] = $file;
-				}
-			}
-			
-			return $filesWithErrors;
-		}
-		
-		public function getFilesWithoutErrors() {
-			
-			$filesWithoutErrors = array();
-			foreach ($this->getFiles() as $file) {
-				if ($file->getErrorCode() == UPLOAD_ERR_OK) {
-					$filesWithoutErrors[] = $file;
-				}
-			}
-			
-			return $filesWithoutErrors;
-		}
 		
 		public function getUploadedFiles() {
 		
@@ -181,76 +178,15 @@
 			$this->files = $files;
 		}
 		
-		private function parseConstraintString($constraintString) {
-			
-			/*
-			if (!is_null($criteria) && $criteria != "") {
-				
-				$crits = explode(' ', $criteria);
-				
-				foreach ($crits as $crit) {
-					
-					$mode	= strtoupper(substr(strrchr($crit, '|'), 1));
-					$crit = str_replace('|'.$mode, '', $crit);
-					$crit = explode('=', $crit);
-
-					switch (strtolower($crit[0])) {
-						case 'type':
-							$this->setType(strtolower($crit[1]), $mode);
-							break;
-						case 'size':
-							$this->setSize(strtolower($crit[1]), $mode);
-							break;
-					}
-				}
-				
-				return true;
-			} else {
-				
-				return false;
-			}*/
-			
-		}
-		
 		# pragma mark constraints
 		
-		public function addConstraints(array $constraints) {
-		
-			foreach ($constraints as $constraint) {
-				$this->addConstraint($constraint);
-			}
-		}
-		
-		public function addConstraint(ConstraintInterface $constraint) {
-			$this->constraints[$constraint->getName()] = $constraint;
-		}
-		
-		public function removeAllConstraints() {
+		public function removeConstraints() {
 			$this->constraints = array();
-		}
-		
-		public function removeConstraint($name) {
-			unset($this->constraints[$name]);
-		}
-		
-		private function getConstraintsNotHolding(File $file) {
-		
-			$constraintsNotHolding = array();
-			foreach ($this->getConstraints() as $constraint) {
-				
-				if (!$constraint->holds($file)) {
-					$constraintsNotHolding[] = $constraint;
-				}
-			}
-			
-			return $constraintsNotHolding;
 		}
 		
 		# pragma mark saving
 	
 		public function saveFile(File $file, $uploadDirectory = null) {
-		
-			// TODO better error management. error entity!
 		
 			// no file given
 			if (is_null($file)) {
@@ -261,38 +197,43 @@
 			// file has upload errors
 			if ($file->getErrorCode() != ERR_UPLOAD_OK) {
 				$file->setUploaded(false);
+				$this->callErrorClosure(FileUploadException::ERR_PHP_UPLOAD, $file->getErrorMessage(), $file);
 				return false;
 			}
 			
 			// check and set upload directory
 			if (!is_null($uploadDirectory)) {
-				checkUploadDirectory($uploadDirectory);
+				try {
+					checkUploadDirectory($uploadDirectory);
+				} catch (\Exception $e) {
+					$file->setUploaded(false);
+					$this->callErrorClosure(FileUploadException::ERR_FILESYSTEM, $e->getMessage(), $file);
+					return false;
+				}	
 			} else {
 				$uploadDirectory = $this->getUploadDirectory();
 			}
 			
-			$constraintsNotHolding = getConstraintsNotHolding($file);
-			
-			// constraints holding
-			if (empty($constraintsNotHolding)) {
-				
-				// save file
-				$filePath = $uploadDirectory.'/'.$file->getName();
-				$isUploaded = @move_uploaded_file($file->getTemporaryName(), $filePath);
-				
-				if ($isUploaded) {
-					$file->setFilePath($filePath);
-					$file->setUploaded(true);
-					return true;
-				} else {
+			// check constraints
+			foreach ($this->getConstraints() as $constraint) {
+				if (!$constraint->holds()) {
 					$file->setUploaded(false);
+					$this->callConstraintClosure($constraint, $file);
 					return false;
 				}
-				
-				// constraint(s) not holding
+			}
+
+			// save file
+			$filePath = $uploadDirectory.'/'.$file->getName();
+			$isUploaded = @move_uploaded_file($file->getTemporaryName(), $filePath);
+			
+			if ($isUploaded) {
+				$file->setFilePath($filePath);
+				$file->setUploaded(true);
+				return true;
 			} else {
+				$this->callErrorClosure(FileUploadException::ERR_MOVE_FILE, sprintf('Could not move file "%s" to new location', $file->getName()), $file);
 				$file->setUploaded(false);
-				$file->setBrokenConstraints($constraintsNotHolding);
 				return false;
 			}
 		}
@@ -300,17 +241,16 @@
 		/**
 		 * @return bool true, if all files were uploaded successful. otherwise false
 		 */
-		public function saveFiles($callable = null, $uploadDirectory = null) {
+		public function save(Closure $closure = null) {
 			
-			$uploadSuccessfull = true;
+			$uploadDirectory = null;
+			$uploadSuccessful = true;
 			
 			foreach ($this->getFiles() as $file) {
 			
 				// invoke the callable to let the caller manipulate the file
-				if (!is_null($fileNameCallable) && !is_callable($fileNameCallable)) {
-					throw new \InvalidArgumentException('The callable is not valid');
-				} else if (!is_null($callable)) {
-					call_user_func($callable, $file);
+				if (!is_null($callable)) {
+					$uploadDirectory = $closure($file);
 				}
 				
 				// set the file name if the caller has not done so
@@ -318,10 +258,33 @@
 					$file->setName($file->getTemporaryName());
 				}
 				
-				$uploadSuccessfull = ($this->saveFile($file, $uploadDirectory) && $uploadSuccessfull);
+				$uploadDirectory = (is_null($uploadDirectory)) ? $this->getUploadDirectory() : $uploadDirectory;
+				$uploadSuccessful = ($this->saveFile($file, $uploadDirectory) && $uploadSuccessful);
 			}
 			
-			return $uploadSuccessfull;
+			return $uploadSuccessful;
+		}
+		
+		# pragma mark error handling
+		
+		public function error(Closure $closure) {
+			$this->errorClosure = $closure;
+		}
+		
+		public function errorConstraint(Closure $closure) {
+			$this->errorConstraintClosure = $closure;
+		}
+		
+		private function callErrorClosure($type, $message, File $file) {
+			if (!is_null($this->errorClosure)) {
+				$this->errorClosure($type, $message, $file);
+			}
+		}
+		
+		private function callConstraintClosure(ConstraintInterface $constraint, File $file) {
+			if (!is_null($this->errorConstraintClosure)) {
+				$this->errorConstraintClosure($constraint, $file);
+			}
 		}
 		
 		# pragma mark various
