@@ -4,14 +4,16 @@
 	
 	class File {
 	
-		protected $name;
-		protected $originalName;
-		protected $temporaryName;
-		protected $fieldName;
-		protected $mimeType;
-		protected $size; // in bytes
-		protected $errorCode;
-		protected $isUploaded;
+		private $name = null;
+		private $originalName = null;
+		private $temporaryName = null;
+		private $fieldName = null;
+		private $mimeType = null;
+		private $size = 0; // in bytes
+		private $errorCode = null;
+		private $isUploaded = false;
+		private $filePath = null;
+		private $brokenConstraints = array();
 		
 		public function setName($name) {
 			$this->name = $name;
@@ -21,7 +23,7 @@
 			return $this->name;
 		}
 		
-		public function setOriginaleName($name) {
+		public function setOriginalName($name) {
 			$this->originalName = $name;
 		}
 		
@@ -61,25 +63,8 @@
 			return $this->size;
 		}
 		
-		/**
-		* Returns a textual representation of any amount of bytes
-		*
-		* @author		wesman20 (php.net)
-		* @author		Jonas John
-		* @version	0.3
-		* @link			http://www.jonasjohn.de/snippets/php/readable-filesize.htm
-		*
-		* @return string A readable representation
-		*/
 		public function getHumanReadableSize() {
-		
-			$mod		= 1024;
-			$units	= explode(' ','B KB MB GB TB PB');
-			for ($i = 0; $size > $mod; $i++) {
-				$size /= $mod;
-			}
-			
-			return round($size, 2) . ' ' . $units[$i];	
+			return Faultier\FileUploader\Utilities::makeHumanReadableSize($this->size);
 		}
 		
 		public function setErrorCode($code) {
@@ -140,12 +125,24 @@
 			return $this->isUploaded;
 		}
 		
-		public function getSuffix() {
-			return pathinfo($this->getName(), PATHINFO_EXTENSION);
+		public function setFilePath($filePath) {
+			$this->filePath = $filePath;
 		}
 		
-		public function __toString() {
-			throw new \Exception('Not yet implemented');
+		public function getFilePath() {
+			return $this->filePath;
+		}
+		
+		public function setBrokenConstraints(array $constraints) {
+			$this->brokenConstraints = $constraints;
+		}
+		
+		public function getBrokenConstraints() {
+			return $this->brokenConstraints;
+		}
+		
+		public function getSuffix() {
+			return pathinfo($this->getName(), PATHINFO_EXTENSION);
 		}
 	}
 
