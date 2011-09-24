@@ -21,14 +21,23 @@
 			SizeConstraint::GREATER_EQUAL
 		);
 	
-		private $mode;
+		private $constraintType;
 		private $size; // in bytes
+		private $mode;
+		
+		public function setConstraintType($type) {
+			$this->constraintType = $type;
+		}
+		
+		public function getConstraintType() {
+			return $this->constraintType;
+		}
 		
 		public function setSize($size) {
 			if (is_numeric($size) && $size >= 0) {
 				$this->size = $size;
 			} else {
-				throw new InvalidArgumentException(sprintf('The size "%i" is not valid', $size));
+				throw new \InvalidArgumentException(sprintf('The size "%i" is not valid', $size));
 			}
 		}
 		
@@ -50,10 +59,42 @@
 		
 		public function parse($options) {
 			
+			// < 123
+			// = 123
+			// > 123
+			// <= 123
+			// >= 123
+			
+			$matches = array();
+			$hasMatches = preg_match('#^(<|=|>|<=|>=) ([0-9]+)$#', $options, $matches);
+			
+			if ($hasMatches === 1) {
+				$this->setMode($matches[1]);
+				$this->setSize($matches[2]);
+			}
 		}
 		
 		public function holds(File $file) {
-			return true;
+			
+			switch ($this->getMode()) {
+				case SizeConstraint::LESS:
+					return ($file->getSize() < $this->getSize());
+					
+				case SizeConstraint::EQUAL:
+					return ($file->getSize() == $this->getSize());
+					
+				case SizeConstraint::GREATER:
+					return ($file->getSize() > $this->getSize());
+					
+				case SizeConstraint::LESS_EQUAL:
+					return ($file->getSize() <= $this->getSize());
+					
+				case SizeConstraint::GREATER_EQUAL:
+					return ($file->getSize() >= $this->getSize());
+				
+				default:
+					return false;
+			}
 		}
 		
 	}
