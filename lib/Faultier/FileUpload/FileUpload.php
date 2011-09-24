@@ -293,14 +293,17 @@
 		
 			if (!file_exists($uploadDirectory)) {
 				throw new \InvalidArgumentException('The given upload directory does not exist');
+				return false;
 			}
 		
 			if (!is_dir($uploadDirectory)) {
 				throw new \InvalidArgumentException('The given upload directory is not a directory');
+				return false;
 			}
 			
 			if (!is_writable($uploadDirectory)) {
 				throw new \InvalidArgumentException('The given upload directory is not writable');
+				return false;
 			}
 			
 			return true;

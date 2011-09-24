@@ -7,16 +7,7 @@
 	
 	class ConstraintException extends \Exception {
 	
-		private $file;
 		private $constraint;
-		
-		public function setFile(File $file) {
-			$this->file = $file;
-		}
-		
-		public function getFile() {
-			return $this->file;
-		}
 		
 		public function setConstraint(ConstraintInterface $constraint) {
 			$this->constraint = $constraint;

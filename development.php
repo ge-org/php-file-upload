@@ -5,7 +5,7 @@
 $fileUploader = new FileUpload('./', array(
 	'size' => '<= 2M',
 	'type' => '= image',
-	'type' => '!= jpg'
+	'type' => '!= jpg tiff'
 ));
 
 $fileUploader->error(function($type, $message, $file) {

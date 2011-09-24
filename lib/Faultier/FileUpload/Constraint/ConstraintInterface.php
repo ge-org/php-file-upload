@@ -6,8 +6,8 @@
 	
 	interface ConstraintInterface {
 	
-		public function setType($type);
-		public function getType();
+		public function setConstraintType($type);
+		public function getConstraintType();
 	
 		public function parse($options);
 		public function holds(File $file);
