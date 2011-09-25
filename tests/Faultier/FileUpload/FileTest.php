@@ -1,5 +1,7 @@
 <?php
 
+	require_once __DIR__.'/../../../lib/Faultier/FileUpload/File.php';
+
 	class FileTest extends PHPUnit_Framework_TestCase {
 	
 		protected $file;
