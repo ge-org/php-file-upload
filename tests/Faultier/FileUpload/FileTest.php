@@ -1,16 +1,17 @@
 <?php
 
+	use Faultier\FileUpload\File;
+
 	class FileTest extends PHPUnit_Framework_TestCase {
 	
 		protected $file;
 		
 		protected function setUp() {
-			$this->file = null;//new File();
+			$this->file = new File();
 		}
 		
 		public function testFileCreated() {
-			$this->assertTrue(false);
-			//$this->assertInstanceOf('File', $this->file);
+			$this->assertInstanceOf('File', $this->file);
 		}
 	
 	}
