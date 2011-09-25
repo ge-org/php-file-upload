@@ -2,7 +2,7 @@
 
 	use Faultier\FileUpload\File;
 
-	class FileTest extends PHPUnit_Framework_TestCase {
+	class FileTest extends \PHPUnit_Framework_TestCase {
 	
 		protected $file;
 		
@@ -11,7 +11,7 @@
 		}
 		
 		public function testFileCreated() {
-			$this->assertInstanceOf('File', $this->file);
+			$this->assertInstanceOf('Faultier\FileUpload\File', $this->file);
 		}
 	
 	}
