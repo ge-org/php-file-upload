@@ -1,6 +1,6 @@
 <?php
 
-// TODO unit tests!
+// TODO unit tests
 // TODO doc comments
 // TODO readme
 
