@@ -1,6 +1,8 @@
 <?php
 
 // TODO unit tests
+// TODO doc comments
+// TODO readme
 
 $fileUploader = new FileUpload('./', array(
 	'size' => '<= 2M',
