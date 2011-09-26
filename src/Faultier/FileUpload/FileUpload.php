@@ -129,7 +129,7 @@
 		}
 		
 		public function getReadableAggregatedFileSize() {
-			return Faultier\FileUpload\Utilities::makeHumanReadableSize($this->getAggregatedFileSize());
+			return $this->getHumanReadableSize($this->getAggregatedFileSize());
 		}
 		
 		# pragma mark parsing
@@ -317,15 +317,14 @@
 		* @version	0.3
 		* @link			http://www.jonasjohn.de/snippets/php/readable-filesize.htm
 		*
-		* @param $file	File	the file containing the size in bytes
+		* @param $file	int	the size in bytes
 		*
 		* @return string A readable representation
 		*/
-		public function makeHumanReadableSize(File $file) {
+		public function getHumanReadableSize($size) {
 	
 			$mod		= 1024;
 			$units	= explode(' ','B KB MB GB TB PB');
-			$size = $file->getSize();
 			for ($i = 0; $size > $mod; $i++) {
 				$size /= $mod;
 			}
