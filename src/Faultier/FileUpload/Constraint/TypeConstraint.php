@@ -5,7 +5,7 @@
 	use Faultier\FileUpload\File;
 	use Faultier\FileUpload\Constraint\ConstraintInterface;
 	
-	class TypeConstraint extends ConstraintInterface {
+	class TypeConstraint implements ConstraintInterface {
 	
 		const EQUAL = '=';
 		const NOT_EQUAL = '!=';

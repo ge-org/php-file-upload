@@ -6,11 +6,11 @@
 	
 		protected $file;
 		
-		protected function setUp() {
+		public function setUp() {
 			$this->file = new File();
 		}
 		
-		public function testFileInstanceCreated() {
+		public function testInstanceCreated() {
 			$this->assertInstanceOf('Faultier\FileUpload\File', $this->file);
 		}
 		
