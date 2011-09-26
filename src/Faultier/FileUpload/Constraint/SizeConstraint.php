@@ -21,16 +21,11 @@
 			SizeConstraint::GREATER_EQUAL
 		);
 	
-		private $constraintType;
 		private $size; // in bytes
 		private $mode;
 		
-		public function setConstraintType($type) {
-			$this->constraintType = $type;
-		}
-		
 		public function getConstraintType() {
-			return $this->constraintType;
+			return 'size';
 		}
 		
 		public function setSize($size) {
@@ -46,7 +41,7 @@
 		}
 		
 		public function setMode($mode) {
-			if (in_array($mode, $modes)) {
+			if (in_array($mode, $this->modes)) {
 				$this->mode = $mode;
 			} else {
 				throw new \InvalidArgumentException(sprintf('The mode "%s" is not valid', $mode));

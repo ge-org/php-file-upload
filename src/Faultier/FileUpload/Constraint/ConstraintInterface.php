@@ -6,7 +6,6 @@
 	
 	interface ConstraintInterface {
 	
-		public function setConstraintType($type);
 		public function getConstraintType();
 	
 		public function parse($options);

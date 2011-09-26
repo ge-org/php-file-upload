@@ -45,8 +45,8 @@
 		}
 		
 		public function testSize() {
-			$this->file->setSize('1234');
-			$this->assertEquals('1234', $this->file->getSize());
+			$this->file->setSize(1234);
+			$this->assertEquals(1234, $this->file->getSize());
 		}
 		
 		public function testErrorCode() {

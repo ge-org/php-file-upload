@@ -19,16 +19,11 @@
 			TypeConstraint::CONTAINS_NOT
 		);
 	
-		private $constraintType;
 		private $mode;
 		private $types = array();
 		
-		public function setConstraintType($type) {
-			$this->constraintType = $type;
-		}
-		
 		public function getConstraintType() {
-			return $this->constraintType;
+			return 'type';
 		}
 		
 		public function setMode($mode) {
