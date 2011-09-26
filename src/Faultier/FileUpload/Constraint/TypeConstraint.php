@@ -27,7 +27,7 @@
 		}
 		
 		public function setMode($mode) {
-			if (in_array($mode, $modes)) {
+			if (in_array($mode, $this->modes)) {
 				$this->mode = $mode;
 			} else {
 				throw new \InvalidArgumentException(sprintf('The mode "%s" is not valid', $mode));
@@ -38,7 +38,7 @@
 			return $this->mode;
 		}
 		
-		public function setTypes(arary $types) {
+		public function setTypes(array $types) {
 			$this->types = $types;
 		}
 		
@@ -74,7 +74,7 @@
 					return true;
 					
 				case TypeConstraint::NOT_EQUAL:
-					foreach ($this->getTypes as $type) {
+					foreach ($this->getTypes() as $type) {
 						if ($file->getMimeType() == $type) {
 							return false;
 						}
@@ -82,8 +82,8 @@
 					return true;
 					
 				case TypeConstraint::CONTAINS:
-					foreach ($this->getTypes as $type) {
-						if (strpos($file->getMimeType(), $this->getType()) === false) {
+					foreach ($this->getTypes() as $type) {
+						if (strpos($file->getMimeType(), $type) === false) {
 							return false;
 						}
 					}
@@ -91,7 +91,7 @@
 					
 				case TypeConstraint::CONTAINS_NOT:
 					foreach ($this->getTypes() as $type) {
-						if (strpos($file->getMimeType(), $this->getType()) !== false) {
+						if (strpos($file->getMimeType(), $type) !== false) {
 							return false;
 						}
 					}
