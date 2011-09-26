@@ -55,19 +55,32 @@
 		}
 		
 		public function setSize($size) {
-			$this->size = $size;
+			if (is_numeric($size)) {
+				$this->size = $size;
+			} else {
+				throw new \InvalidArgumentException('The given size is not a number');
+			}
 		}
 		
 		public function getSize() {
 			return $this->size;
 		}
 		
-		public function getHumanReadableSize() {
-			return Faultier\FileUpload\Utilities::makeHumanReadableSize($this->size);
-		}
-		
 		public function setErrorCode($code) {
-			$this->code = $code;
+			switch ($code) {
+				case 0:
+				case 1:
+				case 2:
+				case 3:
+				case 4:
+				case 6:
+				case 7:
+				case 8:
+					$this->errorCode = $code;
+					break;
+				default:
+					throw new \InvalidArgumentException(sprintf('The error code "%s" is not valid', $code));
+			}
 		}
 		
 		public function getErrorCode() {
@@ -117,7 +130,7 @@
 		}
 		
 		public function setUploaded($uploaded) {
-			$this->isUploaded = $uploaded;
+			$this->isUploaded = (bool) $uploaded;
 		}
 		
 		public function isUploaded() {
