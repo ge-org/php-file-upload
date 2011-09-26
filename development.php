@@ -1,6 +1,7 @@
 <?php
 
 // TODO unit tests
+// TODO autoloader
 // TODO doc comments
 // TODO readme
 
