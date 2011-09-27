@@ -226,7 +226,7 @@
 			}
 
 			// save file
-			$filePath = $uploadDirectory.'/'.$file->getName();
+			$filePath = $uploadDirectory . DIRECTORY_SEPERATOR . $file->getName();
 			$isUploaded = @move_uploaded_file($file->getTemporaryName(), $filePath);
 			
 			if ($isUploaded) {
