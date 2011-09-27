@@ -79,11 +79,27 @@
 			$this->assertTrue($this->constraint->holds($file));
 			
 			$file->setMimeType('image/jpg');
+			$this->constraint->parse('= image/jpeg');
+			$this->assertFalse($this->constraint->holds($file));
+			
+			$file->setMimeType('image/jpeg');
+			$this->constraint->parse('!= image/jpg');
+			$this->assertTrue($this->constraint->holds($file));
+			
+			$file->setMimeType('image/jpg');
 			$this->constraint->parse('!= image/jpg');
 			$this->assertFalse($this->constraint->holds($file));
 			
 			$file->setMimeType('image/jpg');
 			$this->constraint->parse('~ image');
+			$this->assertTrue($this->constraint->holds($file));
+			
+			$file->setMimeType('application/pdf');
+			$this->constraint->parse('~ image');
+			$this->assertFalse($this->constraint->holds($file));
+			
+			$file->setMimeType('application/pdf');
+			$this->constraint->parse('!~ image');
 			$this->assertTrue($this->constraint->holds($file));
 			
 			$file->setMimeType('image/jpg');

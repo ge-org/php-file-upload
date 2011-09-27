@@ -96,9 +96,6 @@
 						}
 					}
 					return true;
-					
-				default:
-					return false;
 			}
 		}
 	}

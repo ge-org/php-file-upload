@@ -86,9 +86,6 @@
 					
 				case SizeConstraint::GREATER_EQUAL:
 					return ($file->getSize() >= $this->getSize());
-				
-				default:
-					return false;
 			}
 		}
 		

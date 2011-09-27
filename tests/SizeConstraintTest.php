@@ -132,6 +132,10 @@
 			$file->setSize(123);
 			$this->constraint->parse('>= 1234');
 			$this->assertFalse($this->constraint->holds($file));
+			
+			$file->setSize(123);
+			$this->constraint->parse('');
+			$this->assertFalse($this->constraint->holds($file));
 		}
 		
 	}

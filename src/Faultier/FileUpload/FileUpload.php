@@ -142,8 +142,10 @@
 			
 				// multi file upload
 				$this->isMultiFileUpload = is_array($uploadedFile['name']);
-				$this->parseFilesArrayMultiUpload($field, $uploadedFile);
-				break;
+				if ($this->isMultiFileUpload()) {
+					$this->parseFilesArrayMultiUpload($field, $uploadedFile);
+					return;
+				}
 				
 				$file = new File();
 				$file->setOriginalName($uploadedFile['name']);
@@ -293,17 +295,14 @@
 		
 			if (!file_exists($uploadDirectory)) {
 				throw new \InvalidArgumentException('The given upload directory does not exist');
-				return false;
 			}
 		
 			if (!is_dir($uploadDirectory)) {
 				throw new \InvalidArgumentException('The given upload directory is not a directory');
-				return false;
 			}
 			
 			if (!is_writable($uploadDirectory)) {
 				throw new \InvalidArgumentException('The given upload directory is not writable');
-				return false;
 			}
 			
 			return true;
