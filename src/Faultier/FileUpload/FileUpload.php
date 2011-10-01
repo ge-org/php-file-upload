@@ -8,9 +8,10 @@
 	
 	class FileUpload {
 	
-		private $uploadDirectory;
 		private $files = array();
 		private $constraints = array();
+		private $constraintNamespaces = array();
+		private $uploadDirectory;
 		private $isMultiFileUpload;
 		private $errorClosure;
 		private $errorConstraintClosure;
@@ -18,6 +19,10 @@
 		const NUMBER_OF_PHP_FILE_INFORMATION = 5;
 		
 		public function __construct($uploadDirectory, array $constraints = array()) {
+		
+			$this->registerConstraintNamespace('Faultier\FileUpload\Constraint\SizeConstraint', 'size');
+			$this->registerConstraintNamespace('Faultier\FileUpload\Constraint\TypeConstraint', 'type');
+		
 			$this->setUploadDirectory($uploadDirectory);
 			$this->setConstraints($constraints);
 			
@@ -25,6 +30,22 @@
 		}
 		
 		# pramga mark setters / getters
+		
+		public function registerConstraintNamespace($namespace, $alias) {
+		
+			$clazz = null;
+			try {
+				$clazz = new \ReflectionClass($namespace);
+			} catch (\ReflectionException $e) {
+				throw new \InvalidArgumentException(sprintf('The constraint class "%s" does not exist', $namespace));
+			}
+			
+			if ($clazz->implementsInterface('Faultier\FileUpload\Constraint\ConstraintInterface')) {
+				$this->constraintNamespaces[$alias] = $namespace;
+			} else {
+				throw new \InvalidArgumentException(sprintf('The class "%s" must implement "Faultier\FileUpload\Constraint\ConstraintInterface"', $namespace));
+			}
+		}
 		
 		public function setUploadDirectory($uploadDirectory) {
 			if ($this->checkUploadDirectory($uploadDirectory)) {
@@ -68,15 +89,27 @@
 				
 				// type and options string given
 				else {
-					try {
-						$clazz = new \ReflectionClass($type);
-						$constraint = $clazz->newInstance();
-					} catch (\ReflectionException $e) {
-						throw new \InvalidArgumentException(sprintf('The constraint type "%s" does not exist', $type));
+				
+					if (isset($this->constraintNamespaces[$type])) {
+						$clazz = null;
+						try {
+							$clazz = new \ReflectionClass($this->constraintNamespaces[$type]);
+						} catch (\ReflectionException $e) {
+							throw new \InvalidArgumentException(sprintf('The constraint "%s" does not exist', $type));
+						}
+						
+						$constraint = null;
+						try {
+							$constraint = $clazz->newInstance();
+						} catch (\ReflectionException $e) {
+							throw new \InvalidArgumentException(sprintf('The constraint "%s" could not be instantiated', $type));
+						}
+						
+						$constraint->parse($options);
+						$this->addConstraint($constraint);
+					} else {
+						throw new \InvalidArgumentException(sprintf('The constraint "%s" has not been registered', $type));
 					}
-					
-					$constraint->parse($options);
-					$this->addConstraint($constraint);
 				}
 				
 			}

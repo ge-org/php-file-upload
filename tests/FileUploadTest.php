@@ -8,6 +8,7 @@
 	 * or clone from github: https://github.com/mikey179/vfsStream
 	*/
 	require_once 'vfsStream/vfsStream.php';
+	require_once 'vfsStream/visitor/vfsStreamPrintVisitor.php';
 
 	use Faultier\FileUpload\FileUpload;
 
@@ -18,20 +19,40 @@
 		
 		public function setUp() {
 			vfsStream::setup($this->dir);
-			
 			$this->up = new FileUpload(vfsStream::url($this->dir));
 		}
 		
-		public function testConstructorWithValidDirectory() {
-			$up = new FileUpload(vfsStream::url($this->dir));
-			$this->assertInstanceOf('Faultier\FileUpload\FileUpload', $up);
-			$this->assertEquals(vfsStream::url($this->dir), $up->getUploadDirectory());
+		public function testInstanceCreated() {
+			$this->assertInstanceOf('Faultier\FileUpload\FileUpload', $this->up);
 		}
 		
-		public function testConstructorWithNotExistingDirectory() {
-			$this->setExpectedException('\InvalidArgumentException', 'The given upload directory does not exist');
-			$up = new FileUpload(null);
+		public function testUploadDirectoryIsValid() {
+			$this->up->setUploadDirectory(vfsStream::url($this->dir));
+			$this->assertEquals(vfsStream::url($this->dir), $this->up->getUploadDirectory());
 		}
+		
+		public function testUploadDirectoryDoesNotExist() {
+			$this->setExpectedException('\InvalidArgumentException', 'The given upload directory does not exist');
+			$this->up->setUploadDirectory(null);
+		}
+		
+		/*
+		public function testUploadDirectoryIsFile() {
+			
+			vfsStream::inspect(new vfsStreamPrintVisitor);
+			
+			$this->setExpectedException('\InvalidArgumentException', 'The given upload directory is not a directory');
+			$this->up->setUploadDirectory(vfsStream::url($this->dir.'/foo.txt'));
+		}
+		*/
+		
+		/*
+		public function testConstructorWithNotWritableDirectory() {
+			$dir = vfsStream::newDirectory('notWritable', 0);
+			$this->setExpectedException('\InvalidArgumentException', 'The given upload directory is not writable');
+			$up = new FileUpload(vfsStream::url($this->dir.'/notWritable'));
+		}
+		*/
 		
 		public function testUploadDirectory() {
 			$this->up->setUploadDirectory(vfsStream::url($this->dir));
@@ -80,9 +101,9 @@
 			$constraint->parse('> 500');
 		
 			$constraints = array(
-				'Faultier\FileUpload\Constraint\SizeConstraint' => '< 1024',
-				'Faultier\FileUpload\Constraint\TypeConstraint' => '~ image',
-				'Faultier\FileUpload\Constraint\TypeConstraint' => '!~ tiff',
+				'size' => '< 1024',
+				'type' => '~ image',
+				'type' => '!~ tiff',
 				$constraint
 			);
 		
@@ -144,22 +165,6 @@
 			$this->up->save();
 			$this->up->save(function(Faultier\FileUpload\File $f){});
 		}
-		
-		/*
-		public function testConstructorWithFileAsDirectory() {
-			vfsStream::newFile('foo.txt');
-			$this->setExpectedException('\InvalidArgumentException', 'The given upload directory is not a directory');
-			$up = new FileUpload(vfsStream::url($this->dir.'/foo.txt'));
-		}
-		*/
-		
-		/*
-		public function testConstructorWithNotWritableDirectory() {
-			$dir = vfsStream::newDirectory('notWritable', 0);
-			$this->setExpectedException('\InvalidArgumentException', 'The given upload directory is not writable');
-			$up = new FileUpload(vfsStream::url($this->dir.'/notWritable'));
-		}
-		*/
 		
 	}
 
