@@ -3,14 +3,14 @@
 	namespace Faultier\FileUpload;
 	
 	use Faultier\FileUpload\File;
-	use Faultier\FileUpload\ConstraintInterface;
+	use Faultier\FileUpload\Constraint\ConstraintInterface;
 	use Faultier\FileUpload\FileUploadException;
 	
 	class FileUpload {
 	
 		private $uploadDirectory;
-		private $files;
-		private $constraints;
+		private $files = array();
+		private $constraints = array();
 		private $isMultiFileUpload;
 		private $errorClosure;
 		private $errorConstraintClosure;
@@ -43,9 +43,11 @@
 		public function getFile($fieldName) {
 			if ($this->isMultiFileUpload()) {
 				throw new \BadMethodCallException('This is a multi file upload. Files cannot be distinguished by their field name.');
+			} else if (!isset($this->files[$fieldName])) {
+				throw new \InvalidArgumentException('The file does not exist');
 			} else {
 				return $this->files[$fieldName];
-			}
+			} 
 		}
 		
 		public function hasFiles() {
@@ -58,8 +60,8 @@
 				
 				// an object has been given instead of an options string
 				if (is_object($options)) {
-					$clazz = new ReflectionClass($options);
-					if ($clazz->implementsInterface('ConstraintInterface')) {
+					$clazz = new \ReflectionClass($options);
+					if ($clazz->implementsInterface('Faultier\FileUpload\Constraint\ConstraintInterface')) {
 						$this->addConstraint($options);
 					}
 				}
@@ -67,9 +69,9 @@
 				// type and options string given
 				else {
 					try {
-						$clazz = new ReflectionClass(ucfirst($type).'Constraint');
+						$clazz = new \ReflectionClass($type);
 						$constraint = $clazz->newInstance();
-					} catch (\LogicException $e) {
+					} catch (\ReflectionException $e) {
 						throw new \InvalidArgumentException(sprintf('The constraint type "%s" does not exist', $type));
 					}
 					
@@ -86,6 +88,10 @@
 		
 		public function hasConstraints() {
 			return !empty($this->constraints);
+		}
+		
+		public function addConstraint(ConstraintInterface $constraint) {
+			$this->constraints[] = $constraint;
 		}
 		
 		public function isMultiFileUpload() {
@@ -121,9 +127,9 @@
 		public function getAggregatedFileSize() {
 			
 			$sum = 0;
-			array_walk($this->getFiles(), function(&$n) use ($sum) {
-				$sum += $n->getSize();
-			});
+			foreach ($this->getFiles() as $file) {
+				$sum += $file->getSize();
+			};
 			
 			return $sum;
 		}
@@ -135,8 +141,6 @@
 		# pragma mark parsing
 		
 		private function parseFilesArray() {
-		
-			$files = array();
 			
 			foreach ($_FILES as $field => $uploadedFile) {
 			
@@ -144,28 +148,24 @@
 				$this->isMultiFileUpload = is_array($uploadedFile['name']);
 				if ($this->isMultiFileUpload()) {
 					$this->parseFilesArrayMultiUpload($field, $uploadedFile);
-					return;
+				} else {
+					$file = new File();
+					$file->setOriginalName($uploadedFile['name']);
+					$file->setTemporaryName($uploadedFile['tmp_name']);
+					$file->setFieldName($field);
+					$file->setMimeType($uploadedFile['type']);
+					$file->setSize($uploadedFile['size']);
+					$file->setErrorCode($uploadedFile['error']);
+					$this->files[$field] = $file;
 				}
-				
-				$file = new File();
-				$file->setOriginalName($uploadedFile['name']);
-				$file->setTemporaryName($uploadedFile['tmp_name']);
-				$file->setFieldName($field);
-				$file->setMimeType($uploadedFile['type']);
-				$file->setSize($uploadedFile['size']);
-				$file->setErrorCode($uploadedFile['error']);
-				$files[$field] = $file;
 			}
-			
-			$this->files = $files;
 		}
 		
 		private function parseFilesArrayMultiUpload($field, $uploadedFile) {
+
+			$numberOfFiles = count($uploadedFile['name']);
+			for ($i = 0; $i < $numberOfFiles; $i++) {
 			
-			$files = array();
-			
-			for ($i = 0; $i < FileUpload::NUMBER_OF_PHP_FILE_INFORMATION; $i++) { 
-				
 				$file = new File();
 				$file->setOriginalName($uploadedFile['name'][$i]);
 				$file->setTemporaryName($uploadedFile['tmp_name'][$i]);
@@ -173,11 +173,10 @@
 				$file->setMimeType($uploadedFile['type'][$i]);
 				$file->setSize($uploadedFile['size'][$i]);
 				$file->setErrorCode($uploadedFile['error'][$i]);
-				$files[$field.$i] = $file;
+				$file->setFieldName($field);
 				
+				$this->files[$field.$i] = $file;
 			}
-			
-			$this->files = $files;
 		}
 		
 		# pragma mark constraints
@@ -197,16 +196,16 @@
 			}
 			
 			// file has upload errors
-			if ($file->getErrorCode() != ERR_UPLOAD_OK) {
+			if ($file->getErrorCode() != UPLOAD_ERR_OK) {
 				$file->setUploaded(false);
-				$this->callErrorClosure(FileUploadException::ERR_PHP_UPLOAD, $file->getErrorMessage(), $file);
+				$this->callErrorClosure(FileUploadException::UPLOAD_ERR_OK, $file->getErrorMessage(), $file);
 				return false;
 			}
 			
 			// check and set upload directory
 			if (!is_null($uploadDirectory)) {
 				try {
-					checkUploadDirectory($uploadDirectory);
+					$this->checkUploadDirectory($uploadDirectory);
 				} catch (\Exception $e) {
 					$file->setUploaded(false);
 					$this->callErrorClosure(FileUploadException::ERR_FILESYSTEM, $e->getMessage(), $file);
@@ -226,7 +225,7 @@
 			}
 
 			// save file
-			$filePath = $uploadDirectory . DIRECTORY_SEPERATOR . $file->getName();
+			$filePath = $uploadDirectory . DIRECTORY_SEPARATOR . $file->getName();
 			$isUploaded = @move_uploaded_file($file->getTemporaryName(), $filePath);
 			
 			if ($isUploaded) {
@@ -243,7 +242,7 @@
 		/**
 		 * @return bool true, if all files were uploaded successful. otherwise false
 		 */
-		public function save(Closure $closure = null) {
+		public function save(\Closure $closure = null) {
 			
 			$uploadDirectory = null;
 			$uploadSuccessful = true;
@@ -251,12 +250,12 @@
 			foreach ($this->getFiles() as $file) {
 			
 				// invoke the callable to let the caller manipulate the file
-				if (!is_null($callable)) {
+				if (!is_null($closure)) {
 					$uploadDirectory = $closure($file);
 				}
 				
 				// set the file name if the caller has not done so
-				if (is_null($callable) || (is_null($file->getName()) || $file->getName() == '')) {
+				if (is_null($closure) || (is_null($file->getName()) || $file->getName() == '')) {
 					$file->setName($file->getTemporaryName());
 				}
 				
@@ -269,17 +268,17 @@
 		
 		# pragma mark error handling
 		
-		public function error(Closure $closure) {
+		public function error(\Closure $closure) {
 			$this->errorClosure = $closure;
 		}
 		
-		public function errorConstraint(Closure $closure) {
+		public function errorConstraint(\Closure $closure) {
 			$this->errorConstraintClosure = $closure;
 		}
 		
 		private function callErrorClosure($type, $message, File $file) {
 			if (!is_null($this->errorClosure)) {
-				$this->errorClosure($type, $message, $file);
+				call_user_func_array($this->errorClosure, array($type, $message, $file));
 			}
 		}
 		
