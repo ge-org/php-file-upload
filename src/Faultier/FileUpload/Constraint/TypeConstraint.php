@@ -64,39 +64,46 @@
 		
 		public function holds(File $file) {
 			
+			$holds = true;
 			switch ($this->getMode()) {
 				case TypeConstraint::EQUAL:
 					foreach ($this->getTypes() as $type) {
 						if ($file->getMimeType() != $type) {
-							return false;
+							$holds = false;
+							break;
 						}
 					}
-					return true;
+					break;
 					
 				case TypeConstraint::NOT_EQUAL:
 					foreach ($this->getTypes() as $type) {
 						if ($file->getMimeType() == $type) {
-							return false;
+							$holds = false;
+							break;
 						}
 					}
-					return true;
+					break;
 					
 				case TypeConstraint::CONTAINS:
 					foreach ($this->getTypes() as $type) {
 						if (strpos($file->getMimeType(), $type) === false) {
-							return false;
+							$holds = false;
+							break;
 						}
 					}
-					return true;
+					break;
 					
 				case TypeConstraint::CONTAINS_NOT:
 					foreach ($this->getTypes() as $type) {
 						if (strpos($file->getMimeType(), $type) !== false) {
-							return false;
+							$holds = false;
+							break;
 						}
 					}
-					return true;
+					break;
 			}
+
+			return $holds;
 		}
 	}
 

@@ -103,25 +103,35 @@
 		
 		public function getErrorMessage() {
 			
+			$msg = '';
 			switch ($this->errorCode) {
 				case UPLOAD_ERR_OK:
-					return 'The file was successfully uploaded';
+					$msg = 'The file was successfully uploaded';
+					break;
 				case UPLOAD_ERR_INI_SIZE:
-					return 'The size exceeds upload_max_filesize set in php.ini';
+					$msg = 'The size exceeds upload_max_filesize set in php.ini';
+					break;
 				case UPLOAD_ERR_FORM_SIZE:
-					return 'The size exceeds MAX_FILE_SIZE set in the HTML form';
+					$msg = 'The size exceeds MAX_FILE_SIZE set in the HTML form';
+					break;
 				case UPLOAD_ERR_PARTIAL:
-					return 'The file was only partially uploaded';
+					$msg = 'The file was only partially uploaded';
+					break;
 				case UPLOAD_ERR_NO_FILE:
-					return 'No file was uploaded';
+					$msg = 'No file was uploaded';
+					break;
 				case UPLOAD_ERR_NO_TMP_DIR:
-					return 'No temporary directory was set';
+					$msg = 'No temporary directory was set';
+					break;
 				case UPLOAD_ERR_CANT_WRITE:
-					return 'Could not write to disk';
+					$msg = 'Could not write to disk';
+					break;
 				case UPLOAD_ERR_EXTENSION:
-					return 'File upload stopped due to extension';
+					$msg = 'File upload stopped due to extension';
+					break;
 			}
 			
+			return $msg;
 		}
 		
 		public function setUploaded($uploaded) {

@@ -71,22 +71,30 @@
 		
 		public function holds(File $file) {
 			
+			$holds = false;
 			switch ($this->getMode()) {
 				case SizeConstraint::LESS:
-					return ($file->getSize() < $this->getSize());
+					$holds = ($file->getSize() < $this->getSize());
+					break;
 					
 				case SizeConstraint::EQUAL:
-					return ($file->getSize() == $this->getSize());
-					
+					$holds = ($file->getSize() == $this->getSize());
+					break;
+
 				case SizeConstraint::GREATER:
-					return ($file->getSize() > $this->getSize());
+					$holds = ($file->getSize() > $this->getSize());
+					break;
 					
 				case SizeConstraint::LESS_EQUAL:
-					return ($file->getSize() <= $this->getSize());
+					$holds = ($file->getSize() <= $this->getSize());
+					break;
 					
 				case SizeConstraint::GREATER_EQUAL:
-					return ($file->getSize() >= $this->getSize());
+					$holds = ($file->getSize() >= $this->getSize());
+					break;
 			}
+
+			return $holds;
 		}
 		
 	}
