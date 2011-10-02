@@ -15,10 +15,18 @@
 	class FileUploadTest extends \PHPUnit_Framework_TestCase {
 	
 		protected $dir = 'exampleDir';
+		protected $file = 'foo.txt';
+	
 		protected $up;
 		
 		public function setUp() {
-			vfsStream::setup($this->dir);
+			vfsStream::create(array(
+				$this->dir => array(
+					$this->file => 'foo'
+				),
+				'notWritable' => array()
+			));
+			
 			$this->up = new FileUpload(vfsStream::url($this->dir));
 		}
 		
@@ -36,23 +44,16 @@
 			$this->up->setUploadDirectory(null);
 		}
 		
-		/*
 		public function testUploadDirectoryIsFile() {
-			
-			vfsStream::inspect(new vfsStreamPrintVisitor);
-			
 			$this->setExpectedException('\InvalidArgumentException', 'The given upload directory is not a directory');
-			$this->up->setUploadDirectory(vfsStream::url($this->dir.'/foo.txt'));
+			$this->up->setUploadDirectory(vfsStream::url($this->dir.DIRECTORY_SEPARATOR.$this->file));
 		}
-		*/
 		
-		/*
 		public function testConstructorWithNotWritableDirectory() {
-			$dir = vfsStream::newDirectory('notWritable', 0);
+			vfsStreamWrapper::getRoot()->getChild('notWritable')->chmod(0000);
 			$this->setExpectedException('\InvalidArgumentException', 'The given upload directory is not writable');
-			$up = new FileUpload(vfsStream::url($this->dir.'/notWritable'));
+			$up = new FileUpload(vfsStream::url('notWritable'));
 		}
-		*/
 		
 		public function testUploadDirectory() {
 			$this->up->setUploadDirectory(vfsStream::url($this->dir));
