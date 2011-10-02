@@ -1,0 +1,175 @@
+h1. Contents
+
+# Introduction
+# Usage
+## Simple Uploading
+## Advanced Uploading
+## Adding Criteria
+## Retrieve Information
+
+h2. Introduction
+
+gdcFileUploader is a PHP5 class library that offers a very easy, yet powerful way to handle uploading of files submitted via a HTML form.
+You can easily just upload all files with only a few lines of code OR you can (also easily) setup powerful rules to restrict uploading and specify uploading parameters.
+Of course you are offered a bunch of detailed information about every single submitted file.
+In addition gdcFileUploader takes care of error handling and doesn't bother you with any of this. Except, of course, you wish to.
+
+h2. Usage
+
+Below I describe various ways to use the class. For the complete API reference see the documentation.
+
+h3. Simple Uploading
+
+If you just want to save all submitted files to the server then have a look at the following snippet.
+It won't get any easier.
+
+<pre>
+<code>
+ <?php
+    $uploader = new gdcFileUploader('.');
+    
+    try {
+        $uploader->saveAllFiles();
+    } catch (gdcFileUploaderException $e) {}
+?>
+</code>
+</pre>
+
+So, what happens here?
+First a new instance of gdcFileUploader is created by passing the upload directory to the constructor.
+Then the _saveAllFiles()_ method is called which saves all files that were submitted successfully.
+This method call is wrapped in a try-catch-block because it throws an exception in case anything goes wrong.
+
+The _saveAllFiles()_ method takes two optional arguments. The first one is the upload directory. The second is a PHP Callable. It will be explained in the next section.
+
+h3. Advanced Uploading
+
+First of all I'll show you a different way to upload your files and then I will explain the second argument of the _saveAllFiles()_ method.
+
+<pre>
+<code>
+ <?php
+    $uploader = new gdcFileUploader('.');
+    
+    foreach ($uploader->getFiles() as $file) {
+        
+        try {
+            $uploader->saveFile($file);
+        } catch (gdcFileUploaderException $e) {}
+    }
+?>
+</code>
+</pre>
+
+This gives you much more control over the files because you gain direct access to the file object, so you can retrieve detailed information about each processed file.
+Additionally you can use the _saveFile()_ method's arguments.
+The first argument is the file object. The second argument takes a file name, so you can change the file's name. By default the original name will be used.
+The third one sets the upload directory.
+
+Now to the advanced _saveAllFiles()_. As I mentioned its second argument takes a PHP callable.
+By default the file's name will be the same as on the user's computer. But usually this is not what you want.
+By passing the callable you can change this because it will be called for every processed file and can then return a new filename.
+
+Here's how it works:
+
+<pre>
+<code>
+<?php
+	function fileNameGenerator($file) {
+		return time().$file->getName().$file->getSuffix();
+	}
+	
+	$uploader = new gdcFileUploader;
+	
+	try {
+		$uploader->saveAllFiles('.', 'fileNameGenerator');
+	} catch (gdcFileUploaderException $e) {}
+?>
+</code>
+</pre>
+
+This of course allows you to perfom other operations on every file. So you can reuse code in different places of your project.
+
+h3. Adding Criteria
+
+Now imagine you run a gallery application. You want your users to submit pictures to it. Of course you want ONLY pictures and no other stuff.
+Of course gdcFileUploader offers a way to achieve this ;-)
+
+<pre>
+<code>
+<?php
+	$uploader = new gdcFileUploader('.');
+	
+	$uploader->addCriteria()->setType('image');
+	
+	try {
+		$uploader->saveAllFiles();
+	} catch (gdcFileUploaderException $e) {}
+?>
+</pre>
+</code>
+
+Pretty easy, huh? And really self explanatory.
+
+Of course you can also limit the files' size.
+This time we use the much easier alternative syntax for criterias and the constructor's second argument.
+
+<pre>
+<code>
+<?php
+	$uploader = new gdcFileUploader('.', 'type=image|EQUAL size=1024|LESS_EQUAL');
+	
+	try {
+		$uploader->saveAllFiles();
+	} catch (gdcFileUploaderException $e) {}
+?>
+</pre>
+</code>
+
+This limits allowed files to images which are 1MB or less in file size and uploads them.
+And all of this in just 4 lines of code!
+
+h3. Retrieving Information
+
+Ok, up to now you've learned everything (or at least almost everything) to know about uploading files.
+But like I promised in the intro you can also retrieve a lot of information about the files.
+
+<pre>
+<code>
+<?php
+    $uploader = new gdcFileUploader;
+    
+    foreach ($uploader->getFiles(false) as $file) {
+        
+        echo "File Name: ".$file->getName()."<br />";
+        echo "File Size: ".$file->getSizeReadable()."<br />";
+        echo "Input Field's name: ".$file->getFieldName()."<br />";
+        echo "File Type: ".$file->getType()."<br />";
+        echo "File Suffix: ".$file->getSuffix(false)."<br />";
+        echo "File Message: ".$file->getErrorMsg()."<br /><br />";
+    }
+?>
+</code>
+</pre>
+
+There's really a lot of stuff to know about your files. Let's see an example output.
+
+<pre>
+<code>
+File name: Angelika Express - Eigentlich eigentlich.mp3
+File size: 3.1 MB
+Input field's name: fileA
+File type: audio/mp3
+File suffix: mp3
+Error message: UPLOAD_ERR_INI_SIZE: The size exceeds upload_max_filesize set in php.ini
+
+File Name: myNewIPhone.jpg
+File Size: 60 KB
+Input Field's name: fileB
+File Type: image/jpg
+File Suffix: jpg
+Error Message: UPLOAD_ERR_OK: The file was successfully uploaded
+</pre>
+</code>
+
+Well that's it, now you're ready to go.
