@@ -1,2 +1,4 @@
 reports/
 .DS_Store
+makedoc
+docs/
