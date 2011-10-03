@@ -13,16 +13,25 @@
 			$this->constraint = new TypeConstraint();
 		}
 	
-		public function testInstanceCreated() {
-		$this->assertInstanceOf('Faultier\FileUpload\Constraint\TypeConstraint', $this->constraint);
+		/**
+		 * @test
+		 */
+		public function instanceIsCreated() {
+			$this->assertInstanceOf('Faultier\FileUpload\Constraint\TypeConstraint', $this->constraint);
 			$this->assertInstanceOf('Faultier\FileUpload\Constraint\ConstraintInterface', $this->constraint);
 		}
 		
-		public function testConstraintType() {
+		/**
+		 * @test
+		 */
+		public function constraintType() {
 			$this->assertEquals('type', $this->constraint->getConstraintType());
 		}
 		
-		public function testMode() {
+		/**
+		 * @test
+		 */
+		public function mode() {
 			$this->constraint->setMode(TypeConstraint::EQUAL);
 			$this->assertEquals(TypeConstraint::EQUAL, $this->constraint->getMode());
 			
@@ -36,18 +45,27 @@
 			$this->assertEquals(TypeConstraint::CONTAINS_NOT, $this->constraint->getMode());
 		}
 		
-		public function testModeException() {
-			$this->setExpectedException('\InvalidArgumentException');
+		/**
+		 * @test
+		 * @expectedException \InvalidArgumentException
+		 */
+		public function modeException() {
 			$this->constraint->setMode('Georg');
 		}
 		
-		public function testTypes() {
+		/**
+		 * @test
+		 */
+		public function types() {
 			$types = array();
 			$this->constraint->setTypes($types);
 			$this->assertEquals($types, $this->constraint->getTypes());
 		}
 		
-		public function testParse() {
+		/**
+		 * @test
+		 */
+		public function parse() {
 			$this->constraint->parse('= xyz xyz');
 			$this->assertEquals(TypeConstraint::EQUAL, $this->constraint->getMode());
 			$this->assertEquals(array('xyz', 'xyz'), $this->constraint->getTypes());
@@ -65,13 +83,19 @@
 			$this->assertEquals(array('xyz', 'xyz'), $this->constraint->getTypes());
 		}
 		
-		public function testParseFalseValues() {
+		/**
+		 * @test
+		 */
+		public function parseFalseValues() {
 			$this->constraint->parse('! abc,abc');
 			$this->assertEquals(null, $this->constraint->getMode());
 			$this->assertEquals(array(), $this->constraint->getTypes());
 		}
 		
-		public function testHolds() {
+		/**
+		 * @test
+		 */
+		public function holds() {
 			$file = new File();
 			
 			$file->setMimeType('image/jpg');

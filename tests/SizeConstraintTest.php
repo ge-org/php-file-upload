@@ -13,26 +13,41 @@
 			$this->constraint = new SizeConstraint();
 		}
 	
-		public function testInstanceCreated() {
+		/**
+		 * @test
+		 */
+		public function instanceIsCreated() {
 			$this->assertInstanceOf('Faultier\FileUpload\Constraint\SizeConstraint', $this->constraint);
 			$this->assertInstanceOf('Faultier\FileUpload\Constraint\ConstraintInterface', $this->constraint);
 		}
 		
-		public function testConstraintType() {
+		/**
+		 * @test
+		 */
+		public function constraintType() {
 			$this->assertEquals('size', $this->constraint->getConstraintType());
 		}
 		
-		public function testSize() {
+		/**
+		 * @test
+		 */
+		public function size() {
 			$this->constraint->setSize(1234);
 			$this->assertEquals(1234, $this->constraint->getSize());
 		}
 		
-		public function testSizeException() {
-			$this->setExpectedException('\InvalidArgumentException');
+		/**
+		 * @test
+		 * @expectedException \InvalidArgumentException
+		 */
+		public function sizeException() {
 			$this->constraint->setSize('Georg');
 		}
 		
-		public function testMode() {
+		/**
+		 * @test
+		 */
+		public function mode() {
 			$this->constraint->setMode(SizeConstraint::LESS);
 			$this->assertEquals(SizeConstraint::LESS, $this->constraint->getMode());
 			
@@ -49,12 +64,18 @@
 			$this->assertEquals(SizeConstraint::GREATER_EQUAL, $this->constraint->getMode());
 		}
 		
-		public function testModeException() {
-			$this->setExpectedException('\InvalidArgumentException');
+		/**
+		 * @test
+		 * @expectedException \InvalidArgumentException
+		 */
+		public function modeException() {
 			$this->constraint->setMode('Georg');
 		}
 		
-		public function testParse() {
+		/**
+		 * @test
+		 */
+		public function parse() {
 			$this->constraint->parse('< 1234');
 			$this->assertEquals(1234, $this->constraint->getSize());
 			$this->assertEquals(SizeConstraint::LESS, $this->constraint->getMode());
@@ -76,13 +97,19 @@
 			$this->assertEquals(SizeConstraint::GREATER_EQUAL, $this->constraint->getMode());
 		}
 		
-		public function testParseFalseValues() {
+		/**
+		 * @test
+		 */
+		public function parseFalseValues() {
 			$this->constraint->parse('! abc');
 			$this->assertEquals('', $this->constraint->getSize());
 			$this->assertEquals(null, $this->constraint->getMode());
 		}
 		
-		public function testHolds() {
+		/**
+		 * @test
+		 */
+		public function holds() {
 			$file = new File();
 			
 			$file->setSize(1234);

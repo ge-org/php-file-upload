@@ -30,73 +30,115 @@
 			$this->up = new FileUpload(vfsStream::url($this->dir));
 		}
 		
-		public function testInstanceCreated() {
+		/**
+		 * @test
+		 */
+		public function instanceIsCreated() {
 			$this->assertInstanceOf('Faultier\FileUpload\FileUpload', $this->up);
 		}
 		
-		public function testUploadDirectoryIsValid() {
+		/**
+		 * @test
+		 */
+		public function uploadDirectoryIsValid() {
 			$this->up->setUploadDirectory(vfsStream::url($this->dir));
 			$this->assertEquals(vfsStream::url($this->dir), $this->up->getUploadDirectory());
 		}
 		
-		public function testUploadDirectoryDoesNotExist() {
-			$this->setExpectedException('\InvalidArgumentException', 'The given upload directory does not exist');
+		/**
+		 * @test
+		 * @expectedException					\InvalidArgumentException
+		 * @expectedExceptionMessage	The given upload directory does not exist
+		 */
+		public function uploadDirectoryDoesNotExist() {
 			$this->up->setUploadDirectory(null);
 		}
 		
-		public function testUploadDirectoryIsFile() {
-			$this->setExpectedException('\InvalidArgumentException', 'The given upload directory is not a directory');
+		/**
+		 * @test
+		 * @expectedException					\InvalidArgumentException
+		 * @expectedExceptionMessage	The given upload directory is not a directory
+		 */
+		public function uploadDirectoryIsFile() {
 			$this->up->setUploadDirectory(vfsStream::url($this->dir.DIRECTORY_SEPARATOR.$this->file));
 		}
 		
-		public function testConstructorWithNotWritableDirectory() {
+		/**
+		 * @test
+		 * @expectedException					\InvalidArgumentException
+		 * @expectedExceptionMessage	The given upload directory is not writable
+		 */
+		public function constructorWithNotWritableDirectory() {
 			vfsStreamWrapper::getRoot()->getChild('notWritable')->chmod(0000);
-			$this->setExpectedException('\InvalidArgumentException', 'The given upload directory is not writable');
 			$up = new FileUpload(vfsStream::url('notWritable'));
 		}
 		
-		public function testUploadDirectory() {
+		/**
+		 * @test
+		 */
+		public function uploadDirectory() {
 			$this->up->setUploadDirectory(vfsStream::url($this->dir));
 			$this->assertEquals(vfsStream::url($this->dir), $this->up->getUploadDirectory());
 		}
 		
-		public function testFilesEmpty() {
+		/**
+		 * @test
+		 * @expectedException	\InvalidArgumentException
+		 */
+		public function filesEmpty() {
 			$up = new FileUpload(vfsStream::url($this->dir));
 			$this->assertEquals(array(), $up->getFiles());
 			$this->assertFalse($up->hasFiles());
-			$this->setExpectedException('\InvalidArgumentException');
 			$up->getFile('');
 		}
 		
-		public function testConstraintsEmpty() {
+		/**
+		 * @test
+		 */
+		public function constraintsEmpty() {
 			$up = new FileUpload(vfsStream::url($this->dir), array());
 			$this->assertEquals(array(), $up->getConstraints());
 			$this->assertFalse($up->hasConstraints());
 		}
 		
-		public function testUploadedFilesEmpty() {
+		/**
+		 * @test
+		 */
+		public function uploadedFilesEmpty() {
 			$up = new FileUpload(vfsStream::url($this->dir));
 			$this->assertEquals(array(), $up->getUploadedFiles());
 			$this->assertEquals(array(), $up->getNotUploadedFiles());
 		}
 		
-		public function testAggregatedFileSizeEmpty() {
+		/**
+		 * @test
+		 */
+		public function aggregatedFileSizeEmpty() {
 			$up = new FileUpload(vfsStream::url($this->dir));
 			$this->assertEquals(0, $up->getAggregatedFileSize());
 			$this->assertEquals('0 B', $up->getReadableAggregatedFileSize());
 		}
 		
-		public function testRemoveConstraints() {
+		/**
+		 * @test
+		 */
+		public function removeConstraints() {
 			$up = new FileUpload(vfsStream::url($this->dir));
 			$up->removeConstraints();
 			$this->assertFalse($up->hasConstraints());
 		}
 		
-		public function testHumanReadableSize() {
+		/**
+		 * @test
+		 */
+		public function humanReadableSize() {
 			$this->assertEquals('1 KB', $this->up->getHumanReadableSize(1025));
 		}
 		
-		public function testConstructorWithValidConstraints() {
+		/**
+		 * @test
+		 */
+		public function constructorWithValidConstraints() {
 		
 			$constraint = new Faultier\FileUpload\Constraint\SizeConstraint();
 			$constraint->parse('> 500');
@@ -112,27 +154,39 @@
 			$this->assertTrue($up->hasConstraints());
 		}
 		
-		public function testConstructorWithInvalidConstraints() {
+		/**
+		 * @test
+		 * @expectedException	\InvalidArgumentException
+		 */
+		public function constructorWithInvalidConstraints() {
 		
 			$constraints = array(
 				'foo' => '< 1024'
 			);
 		
-			$this->setExpectedException('\InvalidArgumentException');
 			$up = new FileUpload(vfsStream::url($this->dir), $constraints);
 		}
 		
-		public function testErrorClosure() {
+		/**
+		 * @test
+		 */
+		public function errorClosure() {
 			$up = new FileUpload(vfsStream::url($this->dir));
 			$up->error(function($t, $m, Faultier\FileUpload\File $f) {});
 		}
 		
-		public function testConstraintClosure() {
+		/**
+		 * @test
+		 */
+		public function constraintClosure() {
 			$up = new FileUpload(vfsStream::url($this->dir));
 			$up->errorConstraint(function(Faultier\FileUpload\ConstraintInterface $c, Faultier\FileUpload\File $f){});
 		}
 		
-		public function testFilesArray() {
+		/**
+		 * @test
+		 */
+		public function filesArray() {
 			$_FILES['foo']['name'] = 'name-bar';
 			$_FILES['foo']['tmp_name'] = 'tmp_name-bar';
 			$_FILES['foo']['type'] = 'type-bar';
@@ -146,7 +200,11 @@
 			$this->assertEquals(1024, $this->up->getAggregatedFileSize());
 		}
 		
-		public function testMultiFilesArray() {
+		/**
+		 * @test
+		 * @expectedException \BadMethodCallException
+		 */
+		public function multiFilesArray() {
 			$_FILES['foo']['name'] = array('name-bar');
 			$_FILES['foo']['tmp_name'] = array('tmp_name-bar');
 			$_FILES['foo']['type'] = array('type-bar');
@@ -157,11 +215,13 @@
 			$this->assertTrue($up->hasFiles());
 			$this->assertTrue($up->isMultiFileUpload());
 			
-			$this->setExpectedException('\BadMethodCallException');
 			$up->getFile('foo');
 		}
 		
-		public function testSave() {
+		/**
+		 * @test
+		 */
+		public function save() {
 			$this->up->error(function($t, $m, $f){});
 			$this->up->save();
 			$this->up->save(function(Faultier\FileUpload\File $f){});

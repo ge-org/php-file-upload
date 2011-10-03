@@ -10,46 +10,73 @@
 			$this->file = new File();
 		}
 		
-		public function testInstanceCreated() {
+		/**
+		 * @test
+		 */
+		public function instanceIsCreated() {
 			$this->assertInstanceOf('Faultier\FileUpload\File', $this->file);
 		}
 		
-		public function testName() {
+		/**
+		 * @test
+		 */
+		public function name() {
 			$this->file->setName('Georg');
 			$this->assertEquals('Georg', $this->file->getName());
 		}
 		
-		public function testOriginalName() {
+		/**
+		 * @test
+		 */
+		public function originalName() {
 			$this->file->setOriginalName('Georg');
 			$this->assertEquals('Georg', $this->file->getOriginalName());
 		}
 		
-		public function testTemporaryName() {
+		/**
+		 * @test
+		 */
+		public function temporaryName() {
 			$this->file->setTemporaryName('Georg');
 			$this->assertEquals('Georg', $this->file->getTemporaryName());
 		}
 		
-		public function testFieldName() {
+		/**
+		 * @test
+		 */
+		public function fieldName() {
 			$this->file->setFieldName('Georg');
 			$this->assertEquals('Georg', $this->file->getFieldName());
 		}
 		
-		public function testMimeType() {
+		/**
+		 * @test
+		 */
+		public function mimeType() {
 			$this->file->setMimeType('Georg');
 			$this->assertEquals('Georg', $this->file->getMimeType());
 		}
 		
-		public function testSizeException() {
-			$this->setExpectedException('\InvalidArgumentException');
+		/**
+		 * @test
+		 * @expectedException \InvalidArgumentException
+		 */
+		public function sizeException() {
 			$this->file->setSize('Georg');
 		}
 		
-		public function testSize() {
+		/**
+		 * @test
+		 */
+		public function size() {
 			$this->file->setSize(1234);
 			$this->assertEquals(1234, $this->file->getSize());
 		}
 		
-		public function testErrorCode() {
+		/**
+		 * @test
+		 */
+		public function errorCode() {
 			$this->file->setErrorCode(0);
 			$this->assertEquals(UPLOAD_ERR_OK, $this->file->getErrorCode());
 
@@ -75,12 +102,18 @@
 			$this->assertEquals(UPLOAD_ERR_EXTENSION, $this->file->getErrorCode());
 		}
 	
-		public function testErrorCodeException() {
-			$this->setExpectedException('\InvalidArgumentException');
+		/**
+		 * @test
+		 * @expectedException \InvalidArgumentException
+		 */
+		public function errorCodeException() {
 			$this->file->setErrorCode(5);
 		}
 		
-		public function testErrorCodeMessage() {
+		/**
+		 * @test
+		 */
+		public function errorCodeMessage() {
 			$this->file->setErrorCode(0);
 			$this->assertEquals('The file was successfully uploaded', $this->file->getErrorMessage());
 			
@@ -106,7 +139,10 @@
 			$this->assertEquals('File upload stopped due to extension', $this->file->getErrorMessage());
 		}
 		
-		public function testUploaded() {
+		/**
+		 * @test
+		 */
+		public function uploaded() {
 			$this->file->setUploaded(true);
 			$this->assertTrue($this->file->isUploaded());
 			
@@ -117,12 +153,18 @@
 			$this->assertTrue($this->file->isUploaded());
 		}
 		
-		public function testFilePath() {
+		/**
+		 * @test
+		 */
+		public function filePath() {
 			$this->file->setFilePath('Georg');
 			$this->assertEquals('Georg', $this->file->getFilePath());
 		}
 		
-		public function testExtension() {
+		/**
+		 * @test
+		 */
+		public function extension() {
 			$this->file->setName('Georg.jpg');
 			$this->assertEquals('jpg', $this->file->getExtension());
 		}
