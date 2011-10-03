@@ -277,7 +277,6 @@
 			// no file given
 			if (is_null($file)) {
 				throw new \InvalidArgumentException('The given file object is null');
-				return false;
 			}
 			
 			// file has upload errors
