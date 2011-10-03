@@ -5,6 +5,9 @@
 	use Faultier\FileUpload\File;
 	use Faultier\FileUpload\Constraint\ConstraintInterface;
 	
+	/**
+	  * @link https://gist.github.com/1258900
+	 */
 	class FileUpload {
 	
 		const ERR_PHP_UPLOAD = 0;
@@ -20,6 +23,17 @@
 		private $errorClosure = null;
 		private $errorConstraintClosure = null;
 		
+		/**
+		 * Creates a FileUpload instance.
+		 *
+		 * @param string  $uploadDirectory  The default directory to where files will be uploaded
+		 * @param array   $constraints      An array describing the constraints to use
+		 *
+		 * @see registerConstraintNamespace
+		 * @see setUploadDirectory
+		 * @see setConstraints
+		 * @see parseFilesArray
+		 */
 		public function __construct($uploadDirectory, array $constraints = array()) {
 		
 			$this->registerConstraintNamespace('Faultier\FileUpload\Constraint\SizeConstraint', 'size');
@@ -31,8 +45,18 @@
 			$this->parseFilesArray();
 		}
 		
-		# pramga mark setters / getters
-		
+		/**
+		 * Registers the namespace and the alias of a constraint class.
+		 *
+		 * <code>
+		 * $up->registerConstraintNamespace('My\Company\CoolConstraint', 'cool');
+		 * </code>
+		 *
+		 * @param string  $namespace  The namespace of the constraint
+		 * @param string  $alias      The alias of the constraint
+		 *
+		 * @throws \InvalidArgumentException  if the constraint class does not existor if it does not implement the {@link Faultier\FileUpload\Constraint\ConstraintInterface} interface
+		 */
 		public function registerConstraintNamespace($namespace, $alias) {
 		
 			$clazz = null;
@@ -49,20 +73,46 @@
 			}
 		}
 		
+		/**
+		 * Sets the default upload directory.
+		 *
+		 * @param string  $uploadDirectory  The default upload directory
+		 *
+		 * @see checkUploadDirectory
+		 */
 		public function setUploadDirectory($uploadDirectory) {
 			if ($this->checkUploadDirectory($uploadDirectory)) {
 				$this->uploadDirectory = $uploadDirectory;
 			}
 		}
 		
+		/**
+		 * Returns the default upload directory.
+		 *
+		 * @return string The default upload directory
+		 */
 		public function getUploadDirectory() {
 			return $this->uploadDirectory;
 		}
 		
+		/**
+		 * Returns an array containing all files.
+		 *
+		 * @return array All files
+		 */
 		public function getFiles() {
 			return array_values($this->files);
 		}
 		
+		/**
+		 * Returns the file that corresponds to a specifi HTML file tag.
+		 *
+		 * @param string  $fieldName  The name of the HTML file tag
+		 *
+		 * @return Faultier\FileUpload\File The desired file
+		 *
+		 * @throws \BadMethodCallException If the upload is a multi file upload {@link isMultiFileUpload}
+		 */
 		public function getFile($fieldName) {
 			if ($this->isMultiFileUpload()) {
 				throw new \BadMethodCallException('This is a multi file upload. Files cannot be distinguished by their field name.');
