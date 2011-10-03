@@ -4,19 +4,21 @@
 	
 	use Faultier\FileUpload\File;
 	use Faultier\FileUpload\Constraint\ConstraintInterface;
-	use Faultier\FileUpload\FileUploadException;
 	
 	class FileUpload {
+	
+		const ERR_PHP_UPLOAD = 0;
+		const ERR_FILESYSTEM = 1;
+		const ERR_CONSTRAINT = 2;
+		const ERR_MOVE_FILE = 3;
 	
 		private $files = array();
 		private $constraints = array();
 		private $constraintNamespaces = array();
-		private $uploadDirectory;
-		private $isMultiFileUpload;
-		private $errorClosure;
-		private $errorConstraintClosure;
-		
-		const NUMBER_OF_PHP_FILE_INFORMATION = 5;
+		private $uploadDirectory = null;
+		private $isMultiFileUpload = false;
+		private $errorClosure = null;
+		private $errorConstraintClosure = null;
 		
 		public function __construct($uploadDirectory, array $constraints = array()) {
 		
@@ -231,7 +233,7 @@
 			// file has upload errors
 			if ($file->getErrorCode() != UPLOAD_ERR_OK) {
 				$file->setUploaded(false);
-				$this->callErrorClosure(FileUploadException::UPLOAD_ERR_OK, $file->getErrorMessage(), $file);
+				$this->callErrorClosure(FileUpload::ERR_PHP_UPLOAD, $file->getErrorMessage(), $file);
 				return false;
 			}
 			
@@ -241,7 +243,7 @@
 					$this->checkUploadDirectory($uploadDirectory);
 				} catch (\Exception $e) {
 					$file->setUploaded(false);
-					$this->callErrorClosure(FileUploadException::ERR_FILESYSTEM, $e->getMessage(), $file);
+					$this->callErrorClosure(FileUpload::ERR_FILESYSTEM, $e->getMessage(), $file);
 					return false;
 				}	
 			} else {
@@ -266,7 +268,7 @@
 				$file->setUploaded(true);
 				return true;
 			} else {
-				$this->callErrorClosure(FileUploadException::ERR_MOVE_FILE, sprintf('Could not move file "%s" to new location', $file->getName()), $file);
+				$this->callErrorClosure(FileUpload::ERR_MOVE_FILE, sprintf('Could not move file "%s" to new location', $file->getName()), $file);
 				$file->setUploaded(false);
 				return false;
 			}
