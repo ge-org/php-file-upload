@@ -2,6 +2,7 @@ h1. Contents
 
 # Introduction
 # Usage
+## Example
 ## Simple Uploading
 ## Advanced Uploading
 ## Adding Criteria
@@ -17,6 +18,11 @@ In addition gdcFileUpload takes care of error handling and doesn't bother you wi
 h2. Usage
 
 Below I describe various ways to use the class. For the complete API reference see the documentation.
+
+h3. Example
+
+See the gist https://gist.github.com/1258900 for an example.
+
 
 h3. Simple Uploading
 
