@@ -19,7 +19,7 @@ The example is also available as a [gist on github][1].
       use Faultier\FileUpload\FileUpload;
 
       $fileUploader = new FileUpload(__DIR__, array(
-        'size' => '<= 2M',
+        'size' => '<= 2048',
         'type' => '~ image',
         'type' => '!~ jpg tiff'
       ));
