@@ -227,6 +227,38 @@
 			$this->up->save(function(Faultier\FileUpload\File $f){});
 		}
 		
+		/**
+		 * @test
+		 */
+		public function constraintNamespaces() {
+		  $constraints = array(
+		    'type' => 'Faultier\FileUpload\Constraint\TypeConstraint',
+		    'size' => 'Faultier\FileUpload\Constraint\SizeConstraint'
+		  );
+		  
+		  $this->assertEquals($constraints, $this->up->getConstraintNamespaces());
+		  
+		  $this->assertEquals('Faultier\FileUpload\Constraint\SizeConstraint', $this->up->resolveConstraintAlias('size'));
+		  $this->assertNull($this->up->resolveConstraintAlias('foo'));
+		}
+		
+		/**
+		 * @test
+		 * @expectedException \InvalidArgumentException
+		 * @expectedExceptionMessage The constraint class "foo" does not exist
+		 */
+		public function constraintNamespaceDoesNotExist() {
+		  $this->up->registerConstraintNamespace('foo', 'bar');
+		}
+		
+		/**
+		 * @test
+		 * @expectedException \InvalidArgumentException
+		 * @expectedExceptionMessage The class "Faultier\FileUpload\FileUpload" must implement "Faultier\FileUpload\Constraint\ConstraintInterface"
+		 */
+		public function constraintDoesNotImplementInterface() {
+		  $this->up->registerConstraintNamespace('Faultier\FileUpload\FileUpload', 'bar');
+		}
 	}
 
 ?>

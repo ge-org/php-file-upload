@@ -74,6 +74,27 @@
 		}
 		
 		/**
+		 * Returns an array containing as key the alias of the constraint and as value its namespace.
+		 *
+		 * @return array The aliases and namespaces of the registered constraints
+		 */
+		public function getConstraintNamespaces() {
+		  return $this->constraintNamespaces;
+		}
+		
+		/**
+		 * Returns the namespace of the constraint with the given alias.
+		 * Returns null if the constraint has not been registered.
+		 *
+		 * @param string  $alias  The alias of the constraint
+		 *
+		 * @return string The namespace of the constraint or null
+		 */
+		public function resolveConstraintAlias($alias) {
+		  return (isset($this->constraintNamespaces[$alias])) ? $this->constraintNamespaces[$alias] : null;
+		}
+		
+		/**
 		 * Sets the default upload directory.
 		 *
 		 * @param string  $uploadDirectory  The default upload directory
@@ -142,20 +163,9 @@
 				// type and options string given
 				else {
 				
-					if (isset($this->constraintNamespaces[$type])) {
-						$clazz = null;
-						try {
-							$clazz = new \ReflectionClass($this->constraintNamespaces[$type]);
-						} catch (\ReflectionException $e) {
-							throw new \InvalidArgumentException(sprintf('The constraint "%s" does not exist', $type));
-						}
-						
-						$constraint = null;
-						try {
-							$constraint = $clazz->newInstance();
-						} catch (\ReflectionException $e) {
-							throw new \InvalidArgumentException(sprintf('The constraint "%s" could not be instantiated', $type));
-						}
+					if (!is_null($this->resolveConstraintAlias($type))) {
+						$clazz = new \ReflectionClass($this->resolveConstraintAlias($type));
+						$constraint = $clazz->newInstance();
 						
 						$constraint->parse($options);
 						$this->addConstraint($constraint);
