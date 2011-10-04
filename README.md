@@ -51,6 +51,15 @@ If you want the file to be saved in a different directory than the default, then
 
 ## Closures
 
+Closures are used to provide you with information about errors or constraints that do not hold while the upload is in process. A closure is also used to give you the possibility to manipulate each `File` object before it will be uploaded.
+
+The `error()` method accepts a closure that will be called if an error occurrs while uploading the file. It will be passed the type of error, the error message and the `File` object that caused the error.
+
+The `errorConstraint()` method accepts a closure that will be called if a constraint does not hold while uploading the file. It will be passed the constraint object and the `File` object.
+
+The `save()` method accepts a closure that will be called for each file before it will be uploaded. It will be passed the `File` object that will be uploaded.
+If this method returns a string it will be used as the directory to which the file will be uploaded.
+
 ## Constraints
 
 Constraints are used to control that the uploaded files comply with rules that you want to enforce. For example limiting the file size or restricting the mime type to images.
@@ -61,7 +70,7 @@ Like their name suggests they can control the file's size and the file's type.
 As you have seen above constraints can easily be added when creating a `FileUpload` instance.
 You just pass the constructor an associative array with the keys containing the constraint's alias and the value being the rules. You can also just pass instances of the constraints.
 
-### SizeConstraint
+### Size Constraint
 
 The `SizeConstraint` goes by the alias `size`. It has several options to restrict the file size:
 
@@ -84,7 +93,7 @@ So you could, for example, limit the file size to be between 1MB and 2MB like so
 ?>
 ```
 
-### TypeConstraint
+### Type Constraint
 
 The `TypeConstraint` goes by the alias `type`. It has several options to restrict the type of the file:
 		
@@ -105,8 +114,9 @@ To restrict the file type to images excluding png and tiff you would write this 
   ));
 ?>
 ```
+You can separate different types with a space. So it is possible, like in the example above, to apply a rule to more than one type.
 
-### Custom constraints
+### Custom Constraints
 
 If you need additional constraints you can easily create your own ones.
 
@@ -152,5 +162,8 @@ You can also use the autoloader that comes with the library:
 
 ## API
 
+The API can be found in the [wiki][3].
+
 [1]: https://gist.github.com/1258900
 [2]: https://gist.github.com/1234504
+[3]: https://github.com/ge-org/php-file-upload/wiki
