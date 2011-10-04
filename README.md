@@ -5,13 +5,11 @@
 `FileUpload` is a PHP class library that offers an easy yet powerful way to handle file uploads.
 It offers an intuitive way to set constrains to control which files are allowed and which not.
 
-## How-To
-
-### Requirements
+## Requirements
 
 `FileUpload` requires PHP version 5.3 or higher.
 
-### Example code
+## How-To
 
 Here is a typical piece of code to utilize the library.
 The example is also available as a [gist on github][1].
@@ -50,18 +48,7 @@ You then register a closure that will be called if any error occurrs while uploa
 After these steps you start the upload process. You may pass the `save()` method another closure. This way you can manipulate properties of the currently processed file. For example you can set its new name.
 If you want the file to be saved in a different directory than the default, then the closure must return the directory to use for the current file.
 
-### Closures
-
-### Autoloader
-
-The library adopts the [PSR-0][2] namespace convention.
-This means you can use any autoloader that can handle the convention.
-You can also use the autoloader that comes with the library:
-
-    <?php
-      require_once 'path/to/lib/Faultier/FileUpload/Autoloader.php';
-      Faultier\FileUpload\Autoloader::register();
-    ?>
+## Closures
 
 ## Constraints
 
@@ -97,6 +84,43 @@ So you could, for example, limit the file size to be between 1MB and 2MB like so
 ### TypeConstraint
 
 ### Custom constraints
+
+If you need additional constraints you can easily create your own ones.
+
+All you have to do is implement the `Faultier\FileUpload\Constraint\ConstraintInterface` and register the namespace and alias of your constraint calling the `registerConstraintNamespace($namespace, $alias)` method on the `FileUpload` instance.
+
+Here is an example:
+
+    FooConstraint.php
+    <?php
+      namespace My\Namespace;
+      use Faultier\FileUpload\Constraint\ConstraintInterface;
+      
+      class FooConstraint implements ConstraintInterface { ... }
+    ?>
+
+    upload.php
+    <?php
+      use Faultier\FileUpload\FileUpload;
+      $up = new FileUpload(__DIR__);
+      
+      $up->registerConstraintNamespace('My\Namespace\FooConstraint', 'foo');
+      $up->setConstraints(array(
+        'foo' => 'some stuff'
+      ));
+    ?>
+
+## Autoloader
+
+The library adopts the [PSR-0][2] namespace convention.
+This means you can use any autoloader that can handle the convention.
+You can also use the autoloader that comes with the library:
+
+    <?php
+      require_once 'path/to/lib/Faultier/FileUpload/Autoloader.php';
+      Faultier\FileUpload\Autoloader::register();
+    ?>
+
 
 ## API
 
