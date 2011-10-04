@@ -6,10 +6,31 @@
 
 ## How to use it?
 
-[here is some example code][1].
+This code is also available as a [gist on github][1].
 
     <?php
-      # todo
+
+      use Faultier\FileUpload\FileUpload;
+
+      $fileUploader = new FileUpload(__DIR__, array(
+        'size' => '<= 2M',
+        'type' => '~ image',
+        'type' => '!~ jpg tiff'
+      ));
+
+      $fileUploader->error(function($type, $message, $file) {
+        # omg!
+      });
+
+      $fileUploader->errorConstraint(function($constraint, $file) {
+        # do something
+      });
+
+      $fileUploader->save(function($file) {
+        $file->setName('Hello-World');
+        return 'some/other/dir';
+      });
+
     ?>
 
 ### Closures
@@ -20,5 +41,4 @@
 
 ## API
 
-## References
 [1]: https://gist.github.com/1258900
