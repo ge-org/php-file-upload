@@ -12,7 +12,6 @@ It offers an intuitive way to set constrains to control which files are allowed 
 ## How-To
 
 Here is a typical piece of code to utilize the library.
-The example is also available as a [gist on github][1].
 
 ```php
 <?php
@@ -86,6 +85,26 @@ So you could, for example, limit the file size to be between 1MB and 2MB like so
 ```
 
 ### TypeConstraint
+
+The `TypeConstraint` goes by the alias `type`. It has several options to restrict the type of the file:
+		
+* = (equal)
+* != (not equal)
+* ~ (contains)
+* != (contains not)
+
+To restrict the file type to images excluding png and tiff you would write this code:
+
+```php
+<?php
+  use Faultier\FileUpload\FileUpload;
+  
+  $up = new FileUpload(__DIR__, array(
+    'type' => '~ image',
+    'type' => '!~ png tiff'
+  ));
+?>
+```
 
 ### Custom constraints
 
