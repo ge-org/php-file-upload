@@ -54,8 +54,18 @@ If you want the file to be saved in a different directory than the default, then
 
 ### Autoloader
 
+The library adopts the [PSR-0][2] namespace convention.
+This means you can use any autoloader that can handle the convention.
+You can also use the autoloader that comes with the library:
+
+    <?php
+      require_once 'path/to/lib/Faultier/FileUpload/Autoloader.php';
+      Faultier\FileUpload\Autoloader::register();
+    ?>
+
 ## Constraints
 
 ## API
 
 [1]: https://gist.github.com/1258900
+[2]: https://gist.github.com/1234504
