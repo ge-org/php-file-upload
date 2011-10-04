@@ -65,6 +65,39 @@ You can also use the autoloader that comes with the library:
 
 ## Constraints
 
+Constraints are used to control that the uploaded files comply with rules that you want to enforce. For example limiting the file size or restricting the mime type to images.
+
+`FileUpload` comes with two built-in constraints. `SizeConstraint` and `TypeConstraint`.
+Like their name suggests they can control the file's size and the file's type.
+
+As you have seen above constraints can easily be added when creating a `FileUpload` instance.
+You just pass the constructor an associative array with the keys containing the constraint's alias and the value being the rules. You can also just pass instances of the constraints.
+
+### SizeConstraint
+
+The `SizeConstraint` goes by the alias `size`. It has several options to restrict the file size:
+
+* < (less)
+* = (equal)
+* > (greater)
+* <= (less equal)
+* >= (greater equal)
+
+So you could, for example, limit the file size to be between 1MB and 2MB like so:
+
+    <?php
+      use Faultier\FileUpload\FileUpload;
+      
+      $up = new FileUpload(__DIR__, array(
+        'size' => '>= 1024',
+        'size' => '<= 2048'
+      ));
+    ?>
+
+### TypeConstraint
+
+### Custom constraints
+
 ## API
 
 [1]: https://gist.github.com/1258900
