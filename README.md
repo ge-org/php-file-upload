@@ -14,30 +14,32 @@ It offers an intuitive way to set constrains to control which files are allowed 
 Here is a typical piece of code to utilize the library.
 The example is also available as a [gist on github][1].
 
-    <?php
+```php
+<?php
 
-      use Faultier\FileUpload\FileUpload;
+  use Faultier\FileUpload\FileUpload;
 
-      $fileUploader = new FileUpload(__DIR__, array(
-        'size' => '<= 2048',
-        'type' => '~ image',
-        'type' => '!~ jpg tiff'
-      ));
+  $fileUploader = new FileUpload(__DIR__, array(
+    'size' => '<= 2048',
+    'type' => '~ image',
+    'type' => '!~ jpg tiff'
+  ));
 
-      $fileUploader->error(function($type, $message, $file) {
-        # omg!
-      });
+  $fileUploader->error(function($type, $message, $file) {
+    # omg!
+  });
 
-      $fileUploader->errorConstraint(function($constraint, $file) {
-        # do something
-      });
+  $fileUploader->errorConstraint(function($constraint, $file) {
+    # do something
+  });
 
-      $fileUploader->save(function($file) {
-        $file->setName('Hello-World');
-        return 'some/other/dir';
-      });
+  $fileUploader->save(function($file) {
+    $file->setName('Hello-World');
+    return 'some/other/dir';
+  });
 
-    ?>
+?>
+```
     
 It should be pretty self explanatory. Here is what happens:
     
@@ -72,14 +74,16 @@ The `SizeConstraint` goes by the alias `size`. It has several options to restric
 
 So you could, for example, limit the file size to be between 1MB and 2MB like so:
 
-    <?php
-      use Faultier\FileUpload\FileUpload;
-      
-      $up = new FileUpload(__DIR__, array(
-        'size' => '>= 1024',
-        'size' => '<= 2048'
-      ));
-    ?>
+```php
+<?php
+  use Faultier\FileUpload\FileUpload;
+  
+  $up = new FileUpload(__DIR__, array(
+    'size' => '>= 1024',
+    'size' => '<= 2048'
+  ));
+?>
+```
 
 ### TypeConstraint
 
@@ -91,24 +95,28 @@ All you have to do is implement the `Faultier\FileUpload\Constraint\ConstraintIn
 
 Here is an example:
 
-    FooConstraint.php
-    <?php
-      namespace My\Namespace;
-      use Faultier\FileUpload\Constraint\ConstraintInterface;
-      
-      class FooConstraint implements ConstraintInterface { ... }
-    ?>
+```php
+FooConstraint.php
+<?php
+  namespace My\Namespace;
+  use Faultier\FileUpload\Constraint\ConstraintInterface;
+  
+  class FooConstraint implements ConstraintInterface { ... }
+?>
+```
 
-    upload.php
-    <?php
-      use Faultier\FileUpload\FileUpload;
-      $up = new FileUpload(__DIR__);
-      
-      $up->registerConstraintNamespace('My\Namespace\FooConstraint', 'foo');
-      $up->setConstraints(array(
-        'foo' => 'some stuff'
-      ));
-    ?>
+```php
+upload.php
+<?php
+  use Faultier\FileUpload\FileUpload;
+  $up = new FileUpload(__DIR__);
+  
+  $up->registerConstraintNamespace('My\Namespace\FooConstraint', 'foo');
+  $up->setConstraints(array(
+    'foo' => 'some stuff'
+  ));
+?>
+```
 
 ## Autoloader
 
@@ -116,11 +124,12 @@ The library adopts the [PSR-0][2] namespace convention.
 This means you can use any autoloader that can handle the convention.
 You can also use the autoloader that comes with the library:
 
-    <?php
-      require_once 'path/to/lib/Faultier/FileUpload/Autoloader.php';
-      Faultier\FileUpload\Autoloader::register();
-    ?>
-
+```php
+  <?php
+    require_once 'path/to/lib/Faultier/FileUpload/Autoloader.php';
+    Faultier\FileUpload\Autoloader::register();
+  ?>
+```
 
 ## API
 
