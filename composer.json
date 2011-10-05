@@ -1,5 +1,5 @@
 {
-    "name": "Faultier/FileUpload",
+    "name": "faultier/file-upload",
     "type": "library",
     "description": "File upload for PHP 5.3",
     "keywords": ["file","upload"],
@@ -9,7 +9,6 @@
     "authors": [
         {
             "name": "Georg Dresler",
-            "email": "georg@g-dresler.de",
             "homepage": "http://www.g-dresler.de"
         }
     ],
