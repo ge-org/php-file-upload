@@ -17,6 +17,7 @@ Here is a typical piece of code to utilize the library.
 <?php
 
   use Faultier\FileUpload\FileUpload;
+  use Faultier\FileUpload\UploadError;
 
   $fileUploader = new FileUpload(__DIR__, array(
     'size' => '<= 2048',
@@ -24,12 +25,8 @@ Here is a typical piece of code to utilize the library.
     'type' => '!~ jpg tiff'
   ));
 
-  $fileUploader->error(function($type, $message, $file) {
+  $fileUploader->error(function(UploadError $error) {
     # omg!
-  });
-
-  $fileUploader->errorConstraint(function($constraint, $file) {
-    # do something
   });
 
   $fileUploader->save(function($file) {
@@ -44,18 +41,16 @@ It should be pretty self explanatory. Here is what happens:
     
 When creating a new instance you set the default upload directory as the first argument and an array of constraints as the second argument.
 
-You then register a closure that will be called if any error occurrs while uploading and one closure that will be called if any constraint does not hold.
+You then register a closure that will be called if any error occurrs while uploading the files.
 
 After these steps you start the upload process. You may pass the `save()` method another closure. This way you can manipulate properties of the currently processed file. For example you can set its new name.
 If you want the file to be saved in a different directory than the default, then the closure must return the directory to use for the current file.
 
 ## Closures
 
-Closures are used to provide you with information about errors or constraints that do not hold while the upload is in process. A closure is also used to give you the possibility to manipulate each `File` object before it will be uploaded.
+Closures are used to provide you with information about errors while the upload is in progress. A closure is also used to give you the possibility to manipulate each `File` object before it will be uploaded.
 
-The `error()` method accepts a closure that will be called if an error occurrs while uploading the file. It will be passed the type of error, the error message and the `File` object that caused the error.
-
-The `errorConstraint()` method accepts a closure that will be called if a constraint does not hold while uploading the file. It will be passed the constraint object and the `File` object.
+The `error()` method accepts a closure that will be called if any error occurrs while uploading the file. It will be passed the an `UploadError` object that contains the type of error, the error message, the affected file and optionally a constraint that did not hold.
 
 The `save()` method accepts a closure that will be called for each file before it will be uploaded. It will be passed the `File` object that will be uploaded.
 If this method returns a string it will be used as the directory to which the file will be uploaded.
