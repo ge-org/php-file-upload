@@ -122,9 +122,9 @@
 		/**
 		 * @test
 		 */
-		public function removeConstraints() {
+		public function removeAllConstraints() {
 			$up = new FileUpload(vfsStream::url($this->dir));
-			$up->removeConstraints();
+			$up->removeAllConstraints();
 			$this->assertFalse($up->hasConstraints());
 		}
 		

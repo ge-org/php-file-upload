@@ -14,6 +14,25 @@
 		const ERR_FILESYSTEM = 1;
 		const ERR_CONSTRAINT = 2;
 		const ERR_MOVE_FILE = 3;
+		
+		/*
+		  closure(Error $error, FileUpload $up = null)
+		  error object!
+        type
+        message
+        file
+        constraint
+      
+      function($error) {  
+        switch ($error->getType()) {
+          case Error::ERR_CONSTRAINT:
+            $form->setError($error->getFile()->getField(), $error->getConstraint()->getType());
+            break;
+          case default:
+            $form->setError($error->getFile()->getField());
+        }
+      }
+		*/
 	
 		private $files = array();
 		private $constraints = array();
@@ -31,8 +50,7 @@
 		 *
 		 * @see registerConstraintNamespace
 		 * @see setUploadDirectory
-		 * @see setConstraints
-		 * @see parseFilesArray
+		 * @see addConstraints
 		 */
 		public function __construct($uploadDirectory, array $constraints = array()) {
 		
@@ -40,7 +58,7 @@
 			$this->registerConstraintNamespace('Faultier\FileUpload\Constraint\TypeConstraint', 'type');
 		
 			$this->setUploadDirectory($uploadDirectory);
-			$this->setConstraints($constraints);
+			$this->addConstraints($constraints);
 			
 			$this->parseFilesArray();
 		}
@@ -49,13 +67,13 @@
 		 * Registers the namespace and the alias of a constraint class.
 		 *
 		 * <code>
-		 * $up->registerConstraintNamespace('My\Company\CoolConstraint', 'cool');
+		 * $up->registerConstraintNamespace('My\Company\FooConstraint', 'foo');
 		 * </code>
 		 *
 		 * @param string  $namespace  The namespace of the constraint
 		 * @param string  $alias      The alias of the constraint
 		 *
-		 * @throws \InvalidArgumentException  if the constraint class does not existor if it does not implement the {@link Faultier\FileUpload\Constraint\ConstraintInterface} interface
+		 * @throws \InvalidArgumentException  If the constraint class does not exist or if it does not implement the {@link Faultier\FileUpload\Constraint\ConstraintInterface} interface
 		 */
 		public function registerConstraintNamespace($namespace, $alias) {
 		
@@ -95,16 +113,30 @@
 		}
 		
 		/**
-		 * Sets the default upload directory.
+		 * Sets the upload directory.
+		 * Throws an exception if there occurrs any error.
 		 *
-		 * @param string  $uploadDirectory  The default upload directory
+		 * @param string  $uploadDirectory  The upload directory
 		 *
-		 * @see checkUploadDirectory
+		 * @throws \InvalidArgumentException If the upload directory does not exist. Code 0
+		 * @throws \InvalidArgumentException If the upload directory is not a directory. Code 1
+		 * @throws \InvalidArgumentException If the upload directory is not writable. Code 2
 		 */
 		public function setUploadDirectory($uploadDirectory) {
-			if ($this->checkUploadDirectory($uploadDirectory)) {
-				$this->uploadDirectory = $uploadDirectory;
+		
+		  if (!file_exists($uploadDirectory)) {
+				throw new \InvalidArgumentException('The given upload directory does not exist', 0);
 			}
+		
+			if (!is_dir($uploadDirectory)) {
+				throw new \InvalidArgumentException('The given upload directory is not a directory', 1);
+			}
+			
+			if (!is_writable($uploadDirectory)) {
+				throw new \InvalidArgumentException('The given upload directory is not writable', 2);
+			}
+			
+			$this->uploadDirectory = $uploadDirectory;
 		}
 		
 		/**
@@ -126,7 +158,7 @@
 		}
 		
 		/**
-		 * Returns the file that corresponds to a specifi HTML file tag.
+		 * Returns the file that corresponds to a specific HTML file tag.
 		 *
 		 * @param string  $fieldName  The name of the HTML file tag
 		 *
@@ -144,57 +176,108 @@
 			} 
 		}
 		
+		/**
+		 * Indicates whether any files have been uploaded.
+		 *
+		 * @return bool True if any files have been uploaded, otherwise false
+		 */
 		public function hasFiles() {
 			return count($this->getFiles()) > 0;
 		}
 		
-		public function setConstraints(array $constraints) {
+		/**
+		 * Adds constraints. Either by alias and options string or by giving an object instance.
+		 * The array must look like this:
+		 * <code>
+		 * array(
+		 *  'alias' => 'options',
+		 *   constraint instance
+		 * );
+		 * </code>
+		 * 
+		 * @param array $constraints  The constraints to add
+		 *
+		 * @throws \InvalidArgumentException If the given object does not implement {@link Faultier\FileUpload\Constraint\ConstraintInterface} or the alias has not been registered.
+		 */
+		public function addConstraints(array $constraints) {
 		
-			foreach ($constraints as $type => $options) {
+			foreach ($constraints as $alias => $options) {
 				
 				// an object has been given instead of an options string
 				if (is_object($options)) {
+				
 					$clazz = new \ReflectionClass($options);
 					if ($clazz->implementsInterface('Faultier\FileUpload\Constraint\ConstraintInterface')) {
 						$this->addConstraint($options);
+					} else {
+					  throw new \InvalidArgumentException('The given object does not implement the ConstraintInterface');
 					}
 				}
 				
-				// type and options string given
+				// alias and options string given
 				else {
 				
-					if (!is_null($this->resolveConstraintAlias($type))) {
-						$clazz = new \ReflectionClass($this->resolveConstraintAlias($type));
+					if (!is_null($this->resolveConstraintAlias($alias))) {
+						$clazz = new \ReflectionClass($this->resolveConstraintAlias($alias));
 						$constraint = $clazz->newInstance();
-						
 						$constraint->parse($options);
 						$this->addConstraint($constraint);
 					} else {
-						throw new \InvalidArgumentException(sprintf('The constraint "%s" has not been registered', $type));
+						throw new \InvalidArgumentException(sprintf('The constraint alias "%s" has not been registered', $alias));
 					}
 				}
 				
 			}
 		}
 		
+		/**
+		 * Returns all applied constraints.
+		 *
+		 * @return array All applied constraints
+		 */
 		public function getConstraints() {
 			return $this->constraints;
 		}
 		
+		/**
+		 * Indicates whether any constraints will be applied.
+		 *
+		 * @return bool True, if there are any constraints, otherwise false
+		 */
 		public function hasConstraints() {
 			return !empty($this->constraints);
 		}
 		
+		/**
+		 * Adds a constraint instance.
+		 *
+		 * @param Faultier\FileUpload\Constraint\ConstraintInterface  $constraint A constraint instance
+		 */
 		public function addConstraint(ConstraintInterface $constraint) {
 			$this->constraints[] = $constraint;
 		}
 		
+		/**
+		 * Indicates whether the upload is a multi file upload.
+		 * A multi file upload is a kind of uplaod where the HTML file tags are named all the same.
+		 * Here is an example:
+		 * <code>
+		 * <input type="file" name="foo[]" />
+		 * <input type="file" name="foo[]" />
+		 * ...
+		 * </code>
+		 *
+		 * @return bool True if it is a multi file upload, otherwise false
+		 */
 		public function isMultiFileUpload() {
 			return $this->isMultiFileUpload;
 		}
 		
-		# pragma mark extended getters
-		
+		/**
+		 * Returns an array containing only files that have been successfully uploaded.
+		 *
+		 * @return array All files that have been successfully uploaded
+		 */
 		public function getUploadedFiles() {
 		
 			$files = array();
@@ -207,18 +290,20 @@
 			return $files;
 		}
 		
+		/**
+		 * Returns an array containing only files that have not been successfully uploaded.
+		 *
+		 * @return array All files that have not been successfully uploaded
+		 */
 		public function getNotUploadedFiles() {
-			
-			$files = array();
-			foreach ($this->getFiles() as $file) {
-				if (!$file->isUploaded()) {
-					$files[] = $file;
-				}
-			}
-			
-			return $files;
+			return array_intersect($this->getFiles(), $this->getUploadedFiles());
 		}
 		
+		/**
+		 * Returns the aggregated file size of all files in bytes.
+		 *
+		 * @return int The aggregated file size of all files in bytes
+		 */
 		public function getAggregatedFileSize() {
 			
 			$sum = 0;
@@ -229,12 +314,18 @@
 			return $sum;
 		}
 		
+		/**
+		 * Returns the aggregated file size of all files in a human readable format.
+		 *
+		 * @return string The aggregated file size of all files in a human readable format
+		 */
 		public function getReadableAggregatedFileSize() {
 			return $this->getHumanReadableSize($this->getAggregatedFileSize());
 		}
 		
-		# pragma mark parsing
-		
+		/**
+		 * Parses the files array.
+		 */
 		private function parseFilesArray() {
 			
 			foreach ($_FILES as $field => $uploadedFile) {
@@ -243,7 +334,10 @@
 				$this->isMultiFileUpload = is_array($uploadedFile['name']);
 				if ($this->isMultiFileUpload()) {
 					$this->parseFilesArrayMultiUpload($field, $uploadedFile);
-				} else {
+				}
+				
+				// no multi file upload
+				else {
 					$file = new File();
 					$file->setOriginalName($uploadedFile['name']);
 					$file->setTemporaryName($uploadedFile['tmp_name']);
@@ -256,6 +350,9 @@
 			}
 		}
 		
+		/**
+		 * Parses the files array in case of a multi file upload.
+		 */
 		private function parseFilesArrayMultiUpload($field, $uploadedFile) {
 
 			$numberOfFiles = count($uploadedFile['name']);
@@ -274,13 +371,12 @@
 			}
 		}
 		
-		# pragma mark constraints
-		
-		public function removeConstraints() {
+		/**
+		 * Removes all constraints.
+		 */
+		public function removeAllConstraints() {
 			$this->constraints = array();
 		}
-		
-		# pragma mark saving
 	
 		public function saveFile(File $file, $uploadDirectory = null) {
 		
@@ -297,21 +393,22 @@
 			}
 			
 			// check and set upload directory
+			$oldUploadDirectory = $this->getUploadDirectory();
 			if (!is_null($uploadDirectory)) {
 				try {
-					$this->checkUploadDirectory($uploadDirectory);
-				} catch (\Exception $e) {
+					$this->setUploadDirectory($uploadDirectory);
+				} catch (\InvalidArgumentException $e) {
+				  $this->setUploadDirectory($oldUploadDirectory);
 					$file->setUploaded(false);
 					$this->callErrorClosure(FileUpload::ERR_FILESYSTEM, $e->getMessage(), $file);
 					return false;
 				}	
-			} else {
-				$uploadDirectory = $this->getUploadDirectory();
 			}
 			
 			// check constraints
 			foreach ($this->getConstraints() as $constraint) {
 				if (!$constraint->holds()) {
+				  $this->setUploadDirectory($oldUploadDirectory);
 					$file->setUploaded(false);
 					$this->callConstraintClosure($constraint, $file);
 					return false;
@@ -319,14 +416,16 @@
 			}
 
 			// save file
-			$filePath = $uploadDirectory . DIRECTORY_SEPARATOR . $file->getName();
+			$filePath = $this->getUploadDirectory() . DIRECTORY_SEPARATOR . $file->getName();
 			$isUploaded = @move_uploaded_file($file->getTemporaryName(), $filePath);
 			
 			if ($isUploaded) {
+			  $this->setUploadDirectory($oldUploadDirectory);
 				$file->setFilePath($filePath);
 				$file->setUploaded(true);
 				return true;
 			} else {
+			  $this->setUploadDirectory($oldUploadDirectory);
 				$this->callErrorClosure(FileUpload::ERR_MOVE_FILE, sprintf('Could not move file "%s" to new location', $file->getName()), $file);
 				$file->setUploaded(false);
 				return false;
@@ -334,7 +433,13 @@
 		}
 		
 		/**
-		 * @return bool true, if all files were uploaded successful. otherwise false
+		 * Saves all files an indicates whether all files have been uploaded successfully.
+		 *
+		 * @param \Closure  $closure A closure that will be passed the file object for manipulation. If the closure returns a string it will be used as the upload directory for the current file.
+		 *
+		 * @return bool True, if all files were uploaded successfully, otherwise false
+		 *
+		 * @see saveFile
 		 */
 		public function save(\Closure $closure = null) {
 			
@@ -353,14 +458,11 @@
 					$file->setName($file->getTemporaryName());
 				}
 				
-				$uploadDirectory = (is_null($uploadDirectory)) ? $this->getUploadDirectory() : $uploadDirectory;
 				$uploadSuccessful = ($this->saveFile($file, $uploadDirectory) && $uploadSuccessful);
 			}
 			
 			return $uploadSuccessful;
 		}
-		
-		# pragma mark error handling
 		
 		public function error(\Closure $closure) {
 			$this->errorClosure = $closure;
@@ -380,25 +482,6 @@
 			if (!is_null($this->errorConstraintClosure)) {
 				$this->errorConstraintClosure($constraint, $file);
 			}
-		}
-		
-		# pragma mark various
-		
-		public function checkUploadDirectory($uploadDirectory) {
-		
-			if (!file_exists($uploadDirectory)) {
-				throw new \InvalidArgumentException('The given upload directory does not exist');
-			}
-		
-			if (!is_dir($uploadDirectory)) {
-				throw new \InvalidArgumentException('The given upload directory is not a directory');
-			}
-			
-			if (!is_writable($uploadDirectory)) {
-				throw new \InvalidArgumentException('The given upload directory is not writable');
-			}
-			
-			return true;
 		}
 		
 		/**
