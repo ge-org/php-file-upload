@@ -3,6 +3,7 @@
 	namespace Faultier\FileUpload;
 	
 	use Faultier\FileUpload\File;
+	use Faultier\FileUpload\UploadError;
 	use Faultier\FileUpload\Constraint\ConstraintInterface;
 	
 	/**
@@ -10,40 +11,16 @@
 	 */
 	class FileUpload {
 	
-		const ERR_PHP_UPLOAD = 0;
-		const ERR_FILESYSTEM = 1;
-		const ERR_CONSTRAINT = 2;
-		const ERR_MOVE_FILE = 3;
-		
-		/*
-		  closure(Error $error, FileUpload $up = null)
-		  error object!
-        type
-        message
-        file
-        constraint
-      
-      function($error) {  
-        switch ($error->getType()) {
-          case Error::ERR_CONSTRAINT:
-            $form->setError($error->getFile()->getField(), $error->getConstraint()->getType());
-            break;
-          case default:
-            $form->setError($error->getFile()->getField());
-        }
-      }
-		*/
-	
 		private $files = array();
 		private $constraints = array();
 		private $constraintNamespaces = array();
 		private $uploadDirectory = null;
 		private $isMultiFileUpload = false;
 		private $errorClosure = null;
-		private $errorConstraintClosure = null;
 		
 		/**
 		 * Creates a FileUpload instance.
+		 * Registers the two built-in constraints.
 		 *
 		 * @param string  $uploadDirectory  The default directory to where files will be uploaded
 		 * @param array   $constraints      An array describing the constraints to use
@@ -54,8 +31,8 @@
 		 */
 		public function __construct($uploadDirectory, array $constraints = array()) {
 		
-			$this->registerConstraintNamespace('Faultier\FileUpload\Constraint\SizeConstraint', 'size');
-			$this->registerConstraintNamespace('Faultier\FileUpload\Constraint\TypeConstraint', 'type');
+			$this->registerConstraintNamespace('size', 'Faultier\FileUpload\Constraint\SizeConstraint');
+			$this->registerConstraintNamespace('type', 'Faultier\FileUpload\Constraint\TypeConstraint');
 		
 			$this->setUploadDirectory($uploadDirectory);
 			$this->addConstraints($constraints);
@@ -70,24 +47,24 @@
 		 * $up->registerConstraintNamespace('My\Company\FooConstraint', 'foo');
 		 * </code>
 		 *
-		 * @param string  $namespace  The namespace of the constraint
 		 * @param string  $alias      The alias of the constraint
+		 * @param string  $namespace  The namespace of the constraint
 		 *
 		 * @throws \InvalidArgumentException  If the constraint class does not exist or if it does not implement the {@link Faultier\FileUpload\Constraint\ConstraintInterface} interface
 		 */
-		public function registerConstraintNamespace($namespace, $alias) {
+		public function registerConstraintNamespace($alias, $namespace) {
 		
 			$clazz = null;
 			try {
 				$clazz = new \ReflectionClass($namespace);
 			} catch (\ReflectionException $e) {
-				throw new \InvalidArgumentException(sprintf('The constraint class "%s" does not exist', $namespace));
+				throw new \InvalidArgumentException(sprintf('The constraint "%s" does not exist', $namespace));
 			}
 			
 			if ($clazz->implementsInterface('Faultier\FileUpload\Constraint\ConstraintInterface')) {
 				$this->constraintNamespaces[$alias] = $namespace;
 			} else {
-				throw new \InvalidArgumentException(sprintf('The class "%s" must implement "Faultier\FileUpload\Constraint\ConstraintInterface"', $namespace));
+				throw new \InvalidArgumentException(sprintf('The "%s" must implement "Faultier\FileUpload\Constraint\ConstraintInterface"', $namespace));
 			}
 		}
 		
@@ -378,17 +355,21 @@
 			$this->constraints = array();
 		}
 	
+	  /**
+	   * Saves the specified file to the specified upload directory.
+	   * If the specified upload directory is null the default directory will be used.
+	   *
+	   * @param Faultier\FileUpload\File  $file The file to upload
+	   * @param string  $uploadDirectory  The upload directory to use
+	   *
+	   * @return bool True, if the file was uploaded successfully, otherwise false
+	   */
 		public function saveFile(File $file, $uploadDirectory = null) {
-		
-			// no file given
-			if (is_null($file)) {
-				throw new \InvalidArgumentException('The given file object is null');
-			}
 			
 			// file has upload errors
 			if ($file->getErrorCode() != UPLOAD_ERR_OK) {
 				$file->setUploaded(false);
-				$this->callErrorClosure(FileUpload::ERR_PHP_UPLOAD, $file->getErrorMessage(), $file);
+				$this->callErrorClosure(new UploadError(UploadError::ERR_PHP_UPLOAD, $file->getErrorMessage(), $file));
 				return false;
 			}
 			
@@ -400,24 +381,24 @@
 				} catch (\InvalidArgumentException $e) {
 				  $this->setUploadDirectory($oldUploadDirectory);
 					$file->setUploaded(false);
-					$this->callErrorClosure(FileUpload::ERR_FILESYSTEM, $e->getMessage(), $file);
+					$this->callErrorClosure(new UploadError(UploadError::ERR_FILESYSTEM, $e->getMessage(), $file));
 					return false;
 				}	
 			}
 			
 			// check constraints
 			foreach ($this->getConstraints() as $constraint) {
-				if (!$constraint->holds()) {
+				if (!$constraint->holds($file)) {
 				  $this->setUploadDirectory($oldUploadDirectory);
 					$file->setUploaded(false);
-					$this->callConstraintClosure($constraint, $file);
+					$this->callErrorClosure(new UploadError(UploadError::ERR_CONSTRAINT, 'Constraint did not hold', $file, $constraint));
 					return false;
 				}
 			}
 
 			// save file
 			$filePath = $this->getUploadDirectory() . DIRECTORY_SEPARATOR . $file->getName();
-			$isUploaded = @move_uploaded_file($file->getTemporaryName(), $filePath);
+			$isUploaded = $this->moveUploadedFile($file->getTemporaryName(), $filePath);
 			
 			if ($isUploaded) {
 			  $this->setUploadDirectory($oldUploadDirectory);
@@ -426,14 +407,18 @@
 				return true;
 			} else {
 			  $this->setUploadDirectory($oldUploadDirectory);
-				$this->callErrorClosure(FileUpload::ERR_MOVE_FILE, sprintf('Could not move file "%s" to new location', $file->getName()), $file);
+				$this->callErrorClosure(new UploadError(UploadError::ERR_PHP_UPLOAD, 'Could not move the file to the new location', $file));
 				$file->setUploaded(false);
 				return false;
 			}
 		}
 		
+		protected function moveUploadedFile($name, $directory) {
+		  return @move_uploaded_file($name, $directory);
+		}
+		
 		/**
-		 * Saves all files an indicates whether all files have been uploaded successfully.
+		 * Saves all files and indicates whether all files have been uploaded successfully.
 		 *
 		 * @param \Closure  $closure A closure that will be passed the file object for manipulation. If the closure returns a string it will be used as the upload directory for the current file.
 		 *
@@ -464,47 +449,58 @@
 			return $uploadSuccessful;
 		}
 		
+		/**
+		 * Sets the closure to be called in case any error occurrs while uploading.
+		 *
+		 * @param \Closure  $closure  The closure that will be called in case any error occurrs while uploading
+		 */
 		public function error(\Closure $closure) {
 			$this->errorClosure = $closure;
 		}
 		
-		public function errorConstraint(\Closure $closure) {
-			$this->errorConstraintClosure = $closure;
-		}
-		
-		private function callErrorClosure($type, $message, File $file) {
+		/**
+		 * Calls the error closure.
+		 */
+		private function callErrorClosure(UploadError $error) {
 			if (!is_null($this->errorClosure)) {
-				call_user_func_array($this->errorClosure, array($type, $message, $file));
-			}
-		}
-		
-		private function callConstraintClosure(ConstraintInterface $constraint, File $file) {
-			if (!is_null($this->errorConstraintClosure)) {
-				$this->errorConstraintClosure($constraint, $file);
+				call_user_func($this->errorClosure, $error);
 			}
 		}
 		
 		/**
-		* Returns a textual representation of any amount of bytes
-		*
-		* @author		wesman20 (php.net)
-		* @author		Jonas John
-		* @version	0.3
-		* @link			http://www.jonasjohn.de/snippets/php/readable-filesize.htm
-		*
-		* @param $file	int	the size in bytes
-		*
-		* @return string A readable representation
-		*/
-		public function getHumanReadableSize($size) {
+     * Return human readable sizes.
+     *
+     * @author      Aidan Lister <aidan@php.net>
+     * @version     1.3.0
+     * @link        http://aidanlister.com/2004/04/human-readable-file-sizes/
+     * @param       int     $size        size in bytes
+     * @param       string  $max         maximum unit
+     * @param       string  $system      'si' for SI, 'bi' for binary prefixes
+     * @param       string  $retstring   return string format
+     */
+		public function getHumanReadableSize($size, $max = null, $system = 'si', $retstring = '%01.2f %s') {
 	
-			$mod		= 1024;
-			$units	= explode(' ','B KB MB GB TB PB');
-			for ($i = 0; $size > $mod; $i++) {
-				$size /= $mod;
-			}
-		
-			return round($size, 2) . ' ' . $units[$i];
+			// Pick units
+      $systems['si']['prefix'] = array('B', 'K', 'MB', 'GB', 'TB', 'PB');
+      $systems['si']['size']   = 1000;
+      $systems['bi']['prefix'] = array('B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB');
+      $systems['bi']['size']   = 1024;
+      $sys = isset($systems[$system]) ? $systems[$system] : $systems['si'];
+    
+      // Max unit to display
+      $depth = count($sys['prefix']) - 1;
+      if ($max && false !== $d = array_search($max, $sys['prefix'])) {
+          $depth = $d;
+      }
+    
+      // Loop
+      $i = 0;
+      while ($size >= $sys['size'] && $i < $depth) {
+          $size /= $sys['size'];
+          $i++;
+      }
+    
+      return sprintf($retstring, $size, $sys['prefix'][$i]);
 		}
 	}
 

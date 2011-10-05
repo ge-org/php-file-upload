@@ -11,38 +11,42 @@
 	require_once 'vfsStream/visitor/vfsStreamPrintVisitor.php';
 
 	use Faultier\FileUpload\FileUpload;
+	use Faultier\FileUpload\File;
+	use Faultier\FileUpload\UploadError;
+	use Faultier\FileUpload\Constraint\SizeConstraint;
 
 	class FileUploadTest extends \PHPUnit_Framework_TestCase {
 	
-		protected $dir = 'exampleDir';
-		protected $file = 'foo.txt';
+		protected $dirGood = 'exampleDir';
+		protected $dirBad = 'notWritable';
+		protected $dirFile = 'foo.txt';
 	
 		protected $up;
 		
 		public function setUp() {
 			vfsStream::create(array(
-				$this->dir => array(
-					$this->file => 'foo'
+				$this->dirGood => array(
+					$this->dirFile => 'foo'
 				),
-				'notWritable' => array()
+				$this->dirBad => array()
 			));
 			
-			$this->up = new FileUpload(vfsStream::url($this->dir));
+			$this->up = new FileUpload(vfsStream::url($this->dirGood));
 		}
 		
 		/**
 		 * @test
 		 */
-		public function instanceIsCreated() {
-			$this->assertInstanceOf('Faultier\FileUpload\FileUpload', $this->up);
+		public function constructor() {
+			//$this->assertInstanceOf('Faultier\FileUpload\FileUpload', $this->up);
 		}
 		
 		/**
 		 * @test
 		 */
-		public function uploadDirectoryIsValid() {
-			$this->up->setUploadDirectory(vfsStream::url($this->dir));
-			$this->assertEquals(vfsStream::url($this->dir), $this->up->getUploadDirectory());
+		public function uploadDirectoryGood() {
+			$this->up->setUploadDirectory(vfsStream::url($this->dirGood));
+			$this->assertEquals(vfsStream::url($this->dirGood), $this->up->getUploadDirectory());
 		}
 		
 		/**
@@ -50,7 +54,7 @@
 		 * @expectedException					\InvalidArgumentException
 		 * @expectedExceptionMessage	The given upload directory does not exist
 		 */
-		public function uploadDirectoryDoesNotExist() {
+		public function uploadDirectoryNull() {
 			$this->up->setUploadDirectory(null);
 		}
 		
@@ -59,205 +63,420 @@
 		 * @expectedException					\InvalidArgumentException
 		 * @expectedExceptionMessage	The given upload directory is not a directory
 		 */
-		public function uploadDirectoryIsFile() {
-			$this->up->setUploadDirectory(vfsStream::url($this->dir.DIRECTORY_SEPARATOR.$this->file));
+		public function uploadDirectoryFile() {
+			$this->up->setUploadDirectory(vfsStream::url($this->dirGood.DIRECTORY_SEPARATOR.$this->dirFile));
 		}
 		
 		/**
 		 * @test
-		 * @expectedException					\InvalidArgumentException
-		 * @expectedExceptionMessage	The given upload directory is not writable
+		 * @expectedException \InvalidArgumentException
+		 * @expectedExceptionMessage The given upload directory is not writable
 		 */
-		public function constructorWithNotWritableDirectory() {
-			vfsStreamWrapper::getRoot()->getChild('notWritable')->chmod(0000);
-			$up = new FileUpload(vfsStream::url('notWritable'));
+		public function uploadDirectoryNotWritable() {
+		  vfsStreamWrapper::getRoot()->getChild($this->dirBad)->chmod(0000);
+		  $this->up->setUploadDirectory(vfsStream::url($this->dirBad));
 		}
 		
 		/**
 		 * @test
-		 */
-		public function uploadDirectory() {
-			$this->up->setUploadDirectory(vfsStream::url($this->dir));
-			$this->assertEquals(vfsStream::url($this->dir), $this->up->getUploadDirectory());
-		}
-		
-		/**
-		 * @test
-		 * @expectedException	\InvalidArgumentException
 		 */
 		public function filesEmpty() {
-			$up = new FileUpload(vfsStream::url($this->dir));
-			$this->assertEquals(array(), $up->getFiles());
-			$this->assertFalse($up->hasFiles());
-			$up->getFile('');
+			$this->assertEquals(array(), $this->up->getFiles());
+			$this->assertFalse($this->up->hasFiles());
+			$this->assertEquals(array(), $this->up->getUploadedFiles());
+			$this->assertEquals(array(), $this->up->getNotUploadedFiles());
+			$this->assertEquals(0, $this->up->getAggregatedFileSize());
+			$this->assertEquals('0.00 B', $this->up->getReadableAggregatedFileSize());
+		}
+		
+		/**
+		 * @test
+		 * @expectedException \InvalidArgumentException
+		 */
+		public function fileNotExists() {
+		  $this->up->getFile('');
 		}
 		
 		/**
 		 * @test
 		 */
 		public function constraintsEmpty() {
-			$up = new FileUpload(vfsStream::url($this->dir), array());
-			$this->assertEquals(array(), $up->getConstraints());
-			$this->assertFalse($up->hasConstraints());
+			$this->assertEquals(array(), $this->up->getConstraints());
+			$this->assertFalse($this->up->hasConstraints());
+			$this->up->removeAllConstraints();
+			$this->assertFalse($this->up->hasConstraints());
 		}
 		
 		/**
 		 * @test
 		 */
-		public function uploadedFilesEmpty() {
-			$up = new FileUpload(vfsStream::url($this->dir));
-			$this->assertEquals(array(), $up->getUploadedFiles());
-			$this->assertEquals(array(), $up->getNotUploadedFiles());
+		public function constraintAddOne() {
+		  $constraint = new SizeConstraint;
+		  $this->up->addConstraint($constraint);
+		  $this->assertTrue($this->up->hasConstraints());
+		  $this->assertEquals(array($constraint), $this->up->getConstraints());
 		}
 		
 		/**
 		 * @test
 		 */
-		public function aggregatedFileSizeEmpty() {
-			$up = new FileUpload(vfsStream::url($this->dir));
-			$this->assertEquals(0, $up->getAggregatedFileSize());
-			$this->assertEquals('0 B', $up->getReadableAggregatedFileSize());
+		public function constraintAddManyObjects() {
+		  $constraint = new SizeConstraint;
+		  $constraint2 = new SizeConstraint;
+		  $this->up->addConstraints(array($constraint, $constraint2));
+		  $this->assertTrue($this->up->hasConstraints());
+		  $this->assertEquals(array($constraint, $constraint2), $this->up->getConstraints());
+		}
+		
+		/**
+		 * @test
+		 * @expectedException \InvalidArgumentException
+		 * @expectedExceptionMessage 
+		 */
+		public function constraintAddInvalidInterface() {
+		  $constraint = new File;
+		  $this->up->addConstraints(array($constraint));
 		}
 		
 		/**
 		 * @test
 		 */
-		public function removeAllConstraints() {
-			$up = new FileUpload(vfsStream::url($this->dir));
-			$up->removeAllConstraints();
-			$this->assertFalse($up->hasConstraints());
+		public function constrainAddWithString() {
+		  $this->up->removeAllConstraints();
+		  $this->up->addConstraints(array(
+		    'size' => '= 1',
+		    'type' => '= image'
+		  ));
+		  $this->assertTrue($this->up->hasConstraints());
 		}
 		
 		/**
 		 * @test
 		 */
-		public function humanReadableSize() {
-			$this->assertEquals('1 KB', $this->up->getHumanReadableSize(1025));
+		public function constrainAddWithStringMixed() {
+		  $this->up->removeAllConstraints();
+		  $this->up->addConstraints(array(
+		    'size' => '= 1',
+		    'type' => '= image',
+		    new SizeConstraint
+		  ));
+		  $this->assertTrue($this->up->hasConstraints());
+		}
+		
+		/**
+		 * @test
+		 * @expectedException \InvalidArgumentException
+		 * @expectedExceptionMessage The constraint alias "foo" has not been registered
+		 */
+		public function constrainAddUnregistered() {
+		  $this->up->removeAllConstraints();
+		  $this->up->addConstraints(array(
+		    'foo' => '= 1'
+		  ));
 		}
 		
 		/**
 		 * @test
 		 */
-		public function constructorWithValidConstraints() {
-		
-			$constraint = new Faultier\FileUpload\Constraint\SizeConstraint();
-			$constraint->parse('> 500');
-		
-			$constraints = array(
-				'size' => '< 1024',
-				'type' => '~ image',
-				'type' => '!~ tiff',
-				$constraint
-			);
-		
-			$up = new FileUpload(vfsStream::url($this->dir), $constraints);
-			$this->assertTrue($up->hasConstraints());
+		public function constraintRegister() {
+		  $this->up->registerConstraintNamespace('bar', 'Faultier\FileUpload\Constraint\SizeConstraint');
+		  $this->assertEquals(array(
+		    'size' => 'Faultier\FileUpload\Constraint\SizeConstraint',
+		    'type' => 'Faultier\FileUpload\Constraint\TypeConstraint',
+		    'bar' => 'Faultier\FileUpload\Constraint\SizeConstraint'
+		  ), $this->up->getConstraintNamespaces());
 		}
 		
 		/**
 		 * @test
-		 * @expectedException	\InvalidArgumentException
+		 * @expectedException \InvalidArgumentException
+		 * @expectedExceptionMessage The constraint "foo" does not exist
 		 */
-		public function constructorWithInvalidConstraints() {
-		
-			$constraints = array(
-				'foo' => '< 1024'
-			);
-		
-			$up = new FileUpload(vfsStream::url($this->dir), $constraints);
+		public function constraintRegisterInvalidClass() {
+		  $this->up->registerConstraintNamespace('bar', 'foo');
 		}
 		
 		/**
 		 * @test
+		 * @expectedException \InvalidArgumentException
+		 * @expectedExceptionMessage The "Faultier\FileUpload\FileUpload" must implement "Faultier\FileUpload\Constraint\ConstraintInterface"
 		 */
-		public function errorClosure() {
-			$up = new FileUpload(vfsStream::url($this->dir));
-			$up->error(function($t, $m, Faultier\FileUpload\File $f) {});
+		public function constraintRegisterInvalidInterface() {
+		  $this->up->registerConstraintNamespace('bar', 'Faultier\FileUpload\FileUpload');
 		}
 		
 		/**
 		 * @test
 		 */
-		public function constraintClosure() {
-			$up = new FileUpload(vfsStream::url($this->dir));
-			$up->errorConstraint(function(Faultier\FileUpload\ConstraintInterface $c, Faultier\FileUpload\File $f){});
+		public function constructorWithConstraints() {
+		  $up = new FileUpload(vfsStream::url($this->dirGood), array(
+		    'size' => '< 1024',
+		    new SizeConstraint
+		  ));
+		  $this->assertTrue($up->hasConstraints());
 		}
 		
 		/**
 		 * @test
 		 */
-		public function filesArray() {
+		public function parseFilesArray() {
 			$_FILES['foo']['name'] = 'name-bar';
 			$_FILES['foo']['tmp_name'] = 'tmp_name-bar';
 			$_FILES['foo']['type'] = 'type-bar';
 			$_FILES['foo']['size'] = 1024;
 			$_FILES['foo']['error'] = UPLOAD_ERR_OK;
 			
-			$this->up = new FileUpload(vfsStream::url($this->dir));
-			$this->assertTrue($this->up->hasFiles());
-			$this->assertInstanceOf('Faultier\FileUpload\File', $this->up->getFile('foo'));
-			
-			$this->assertEquals(1024, $this->up->getAggregatedFileSize());
+			$up = new FileUpload(vfsStream::url($this->dirGood));
+			$this->assertTrue($up->hasFiles());
+			$this->assertEquals(1, count($up->getFiles()));
+			$this->assertInstanceOf('Faultier\FileUpload\File', $up->getFile('foo'));
 		}
 		
 		/**
 		 * @test
-		 * @expectedException \BadMethodCallException
 		 */
-		public function multiFilesArray() {
+		public function parseMultiFilesArray() {
 			$_FILES['foo']['name'] = array('name-bar');
 			$_FILES['foo']['tmp_name'] = array('tmp_name-bar');
 			$_FILES['foo']['type'] = array('type-bar');
 			$_FILES['foo']['size'] = array(1024);
 			$_FILES['foo']['error'] = array(UPLOAD_ERR_OK);
 			
-			$up = new FileUpload(vfsStream::url($this->dir));
+			$up = new FileUpload(vfsStream::url($this->dirGood));
 			$this->assertTrue($up->hasFiles());
+			$this->assertEquals(1, count($up->getFiles()));
 			$this->assertTrue($up->isMultiFileUpload());
+		}
+		
+		/**
+		 * @test
+		 * @expectedException \BadMethodCallException
+		 */
+		public function multiFilesArrayGetFile() {
+			$_FILES['foo']['name'] = array('name-bar');
+			$_FILES['foo']['tmp_name'] = array('tmp_name-bar');
+			$_FILES['foo']['type'] = array('type-bar');
+			$_FILES['foo']['size'] = array(1024);
+			$_FILES['foo']['error'] = array(UPLOAD_ERR_OK);
 			
+			$up = new FileUpload(vfsStream::url($this->dirGood));
 			$up->getFile('foo');
 		}
 		
 		/**
 		 * @test
 		 */
-		public function save() {
-			$this->up->error(function($t, $m, $f){});
-			$this->up->save();
-			$this->up->save(function(Faultier\FileUpload\File $f){});
+		public function saveWithoutFiles() {
+		  $up = new FileUpload(vfsStream::url($this->dirGood));
+			$up->save();
+			$this->assertEquals(array(), $up->getUploadedFiles());
 		}
 		
 		/**
 		 * @test
 		 */
-		public function constraintNamespaces() {
-		  $constraints = array(
-		    'type' => 'Faultier\FileUpload\Constraint\TypeConstraint',
-		    'size' => 'Faultier\FileUpload\Constraint\SizeConstraint'
-		  );
+		public function saveWithFiles() {
+		
+		  $_FILES['foo']['name'] = 'name-bar';
+			$_FILES['foo']['tmp_name'] = 'tmp_name-bar';
+			$_FILES['foo']['type'] = 'type-bar';
+			$_FILES['foo']['size'] = 1024;
+			$_FILES['foo']['error'] = UPLOAD_ERR_OK;
+			
+				// for mockign reasons
+	      require 'MovesFilesFileUpload.php';
+			
+			$up = new MovesFilesFileUpload(vfsStream::url($this->dirGood));
+			$up->save();
+		}
+		
+		/**
+		 * @test
+		 */
+		public function saveWithFilesAndClosure() {
+		
+		  $_FILES['foo']['name'] = 'name-bar';
+			$_FILES['foo']['tmp_name'] = 'tmp_name-bar';
+			$_FILES['foo']['type'] = 'type-bar';
+			$_FILES['foo']['size'] = 1024;
+			$_FILES['foo']['error'] = UPLOAD_ERR_OK;
+		
+		  $up = new FileUpload(vfsStream::url($this->dirGood));
+			$up->save(function(File $file){
+			  $file->setName('foo');
+			});
+			$this->assertEquals('foo', $up->getFile('foo')->getName());
+		}
+		
+		/**
+		 * @test
+		 */
+		public function saveWithFilesAndClosureWithReturn() {
+		
+		  $_FILES['foo']['name'] = 'name-bar';
+			$_FILES['foo']['tmp_name'] = 'tmp_name-bar';
+			$_FILES['foo']['type'] = 'type-bar';
+			$_FILES['foo']['size'] = 1024;
+			$_FILES['foo']['error'] = UPLOAD_ERR_OK;
+		
+		  $up = new FileUpload(vfsStream::url($this->dirGood));
 		  
-		  $this->assertEquals($constraints, $this->up->getConstraintNamespaces());
+		  $path = vfsStream::url($this->dirGood);
 		  
-		  $this->assertEquals('Faultier\FileUpload\Constraint\SizeConstraint', $this->up->resolveConstraintAlias('size'));
-		  $this->assertNull($this->up->resolveConstraintAlias('foo'));
+			$up->save(function(File $file) use ($path) {
+			  $file->setName('foo');
+			  return $path;
+			});
+			$this->assertEquals('foo', $up->getFile('foo')->getName());
 		}
 		
 		/**
 		 * @test
-		 * @expectedException \InvalidArgumentException
-		 * @expectedExceptionMessage The constraint class "foo" does not exist
 		 */
-		public function constraintNamespaceDoesNotExist() {
-		  $this->up->registerConstraintNamespace('foo', 'bar');
+		public function saveWithFilesAndClosureWithInvalidReturn() {
+		
+		  $_FILES['foo']['name'] = 'name-bar';
+			$_FILES['foo']['tmp_name'] = 'tmp_name-bar';
+			$_FILES['foo']['type'] = 'type-bar';
+			$_FILES['foo']['size'] = 1024;
+			$_FILES['foo']['error'] = UPLOAD_ERR_OK;
+		
+		  $up = new FileUpload(vfsStream::url($this->dirGood));		  
+			$up->save(function(File $file) {
+			  $file->setName('foo');
+			  return '';
+			});
+			$this->assertEquals('foo', $up->getFile('foo')->getName());
 		}
 		
 		/**
 		 * @test
-		 * @expectedException \InvalidArgumentException
-		 * @expectedExceptionMessage The class "Faultier\FileUpload\FileUpload" must implement "Faultier\FileUpload\Constraint\ConstraintInterface"
 		 */
-		public function constraintDoesNotImplementInterface() {
-		  $this->up->registerConstraintNamespace('Faultier\FileUpload\FileUpload', 'bar');
+		public function saveWithFilesAndErrorClosure() {
+		
+		  $_FILES['foo']['name'] = 'name-bar';
+			$_FILES['foo']['tmp_name'] = 'tmp_name-bar';
+			$_FILES['foo']['type'] = 'type-bar';
+			$_FILES['foo']['size'] = 1024;
+			$_FILES['foo']['error'] = UPLOAD_ERR_OK;
+		
+		  $up = new FileUpload(vfsStream::url($this->dirGood));
+		  
+		  $fileName = null;
+		  $up->error(function(UploadError $error) use (&$fileName) {
+		    $fileName = $error->getFile()->getName();
+		  });
+			$up->save();
+			
+			$this->assertEquals('tmp_name-bar', $fileName);
+		}
+		
+		/**
+		 * @test
+		 */
+		public function saveOneFile() {
+		
+		  $_FILES['foo']['name'] = 'name-bar';
+			$_FILES['foo']['tmp_name'] = 'tmp_name-bar';
+			$_FILES['foo']['type'] = 'type-bar';
+			$_FILES['foo']['size'] = 1024;
+			$_FILES['foo']['error'] = UPLOAD_ERR_OK;
+		
+		  $up = new FileUpload(vfsStream::url($this->dirGood));
+			$up->saveFile($up->getFile('foo'));
+		}
+		
+		/**
+		 * @test
+		 */
+		public function saveFilesWithError() {
+		
+		  $_FILES['foo']['name'] = 'name-bar';
+			$_FILES['foo']['tmp_name'] = 'tmp_name-bar';
+			$_FILES['foo']['type'] = 'type-bar';
+			$_FILES['foo']['size'] = 1024;
+			$_FILES['foo']['error'] = UPLOAD_ERR_INI_SIZE;
+		
+		  $up = new FileUpload(vfsStream::url($this->dirGood));
+		  $type = null;
+		  $up->error(function(UploadError $error) use (&$type) {
+		    $type = $error->getType();
+		  });
+			$up->save();
+			
+			$this->assertEquals(UploadError::ERR_PHP_UPLOAD, $type);
+		}
+		
+		/**
+		 * @test
+		 */
+		public function saveFilesWithConstaintNotHolding() {
+		
+		  $_FILES['foo']['name'] = 'name-bar';
+			$_FILES['foo']['tmp_name'] = 'tmp_name-bar';
+			$_FILES['foo']['type'] = 'type-bar';
+			$_FILES['foo']['size'] = 1024;
+			$_FILES['foo']['error'] = UPLOAD_ERR_OK;
+		
+		  $up = new FileUpload(vfsStream::url($this->dirGood), array(
+		    'size' => '< 1024'
+		  ));
+		  $type = null;
+		  $up->error(function(UploadError $error) use (&$type) {
+		    $type = $error->getType();
+		  });
+			$up->save();
+			
+			$this->assertEquals(UploadError::ERR_CONSTRAINT, $type);
+		}
+		
+		/**
+		 * @test
+		 */
+		public function uploadedFiles() {
+		
+		  $_FILES['foo']['name'] = 'name-bar';
+			$_FILES['foo']['tmp_name'] = 'tmp_name-bar';
+			$_FILES['foo']['type'] = 'type-bar';
+			$_FILES['foo']['size'] = 1024;
+			$_FILES['foo']['error'] = UPLOAD_ERR_OK;
+		
+		  $up = new FileUpload(vfsStream::url($this->dirGood));
+			
+			foreach ($up->getFiles() as $file) {
+			  $file->setUploaded(true);
+			}
+			
+			$this->assertTrue(in_array($up->getFile('foo'), $up->getUploadedFiles()));
+		}
+		
+		/**
+		 * @test
+		 */
+		public function aggregatedFileSize() {
+		
+		  $_FILES['foo']['name'] = 'name-bar';
+			$_FILES['foo']['tmp_name'] = 'tmp_name-bar';
+			$_FILES['foo']['type'] = 'type-bar';
+			$_FILES['foo']['size'] = 1024;
+			$_FILES['foo']['error'] = UPLOAD_ERR_OK;
+		
+		  $up = new FileUpload(vfsStream::url($this->dirGood));
+			$this->assertEquals(1024, $up->getAggregatedFileSize());
+		}
+		
+		/**
+		 * @test
+		 */
+		public function humanReadableSize() {
+			$this->assertEquals('1.02 K', $this->up->getHumanReadableSize(1025));
+		}
+		
+		/**
+		 * @test
+		 */
+		public function humanReadableSizeWithMax() {
+			$this->assertEquals('1025.00 B', $this->up->getHumanReadableSize(1025, 'B'));
 		}
 	}
 
