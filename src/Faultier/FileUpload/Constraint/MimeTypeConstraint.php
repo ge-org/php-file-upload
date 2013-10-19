@@ -40,7 +40,8 @@ class MimeTypeConstraint  extends baseConstraint
                 
                 return TRUE;
             }
-            $this->addError("Invalid File Type!");
+            $this->addError($this->messageTemplates[self::invalidFileType]);
 			return FALSE;
 		}    
 }
+
