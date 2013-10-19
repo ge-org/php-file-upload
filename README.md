@@ -67,11 +67,11 @@ $fileUploader->addConstraints(array(
 ```
 ####### Options
 <ul>
-<li>< (less)</li>
-<li>= (equal)</li>
-<li>> (greater)</li>
-<li>< (less)</li>
-<li>< (less)</li>
+* < (less)
+* = (equal)
+* > (greater)
+* < (less)
+* < (less)
 </ul>
 
 
@@ -134,7 +134,6 @@ The `error()` method accepts a closure that will be called if any error occurrs 
 ### Finally Saving Files
 ```php
 $fileUploader->save(function(File $file) {
-    $file->setName('Hello-World');
     return 'some/other/dir';
 });
 ```
@@ -164,10 +163,14 @@ For example,
 $fileUploader->addConstraints(array(
             "size"=>array(
                 "value"=>'<= 2048',
-                "message"=>'The file you uploaded is very large in size. Try uploading a small sized file!'
+                "message"=>array(
+                    "fileIsLarger"=>'The file you uploaded is very large in size. Try uploading a small sized file!',
+                )
             ),"image"=>array( 
                 "value"=>true,
-                "message"=>'The file you uploaded is not a valid image! '
+                "message"=>array(
+                    "fileIsNotImage"=>'The file you uploaded is not a valid image! '
+                )
             ),   
     )
 );
@@ -175,7 +178,7 @@ $fileUploader->addConstraints(array(
 $fileUploader->error(function(UploadError $error) {
     $messages =  $error->getMessages(); 
     foreach($messages as $message){
-        \\handle error messages here
+        //handle error messages here
     }
    
 });
@@ -187,7 +190,7 @@ $fileUploader->error(function(UploadError $error) {
 
 If you need additional constraints you can easily create your own ones.
 
-All you have to do is implement the `Faultier\FileUpload\Constraint\ConstraintInterface` and register the namespace and alias of your constraint calling the `registerConstraintNamespace($alias, $namespace)` method on the `FileUpload` instance.
+All you have to do is implement the `Faultier\FileUpload\Constraint\ConstraintInterface` or extend abstract class,`Faultier\FileUpload\Constraint\baseConstraint`  and register the namespace and alias of your constraint calling the `registerConstraintNamespace($alias, $namespace)` method on the `FileUpload` instance.
 
 Here is an example:
 ```php
@@ -199,6 +202,11 @@ FooConstraint.php
   use Faultier\FileUpload\Constraint\ConstraintInterface;
 
   class FooConstraint implements ConstraintInterface { ... }
+  // or you can do class 
+
+  use Faultier\FileUpload\Constraint\baseConstraint;
+
+  class FooConstraint extends baseConstraint { ... }
 ?>
 ```
 
@@ -213,6 +221,90 @@ $up->setConstraints(array(
 ?>
 ```
 
+#### Detail Example of Custom Constraints
+
+Lets create ExcludeMimeTypeConstraint to disallow certain mime types::
+
+```php
+ExcludeMimeTypeConstraint.php
+
+<?php
+namespace My\Namespace;
+
+use Faultier\FileUpload\Constraint\baseConstraint;
+use Faultier\FileUpload\File;
+
+class ExcludeMimeTypeConstraint extends baseConstraint {
+
+    // mime types that are not allowed
+    protected $types=array();
+
+    const invalidFileType="invalidFileType";
+
+    protected $messageTemplates=array(
+        self::invalidFileType=>"Invalid File Type",
+    );
+
+    public function setMimeTypes(array $types=array()) {
+		$this->types = $types;
+	}
+		
+	public function getMimeTypes() {
+		return $this->types;
+	}
+
+    public function setOptions($options){
+		if(isset($options['value'])){
+			$this->setMimeTypes($options['value']);
+		}
+    }
+
+	public function isValid(File $file) {
+            
+        if(!in_array($file->getMimeType(),$this->getMimeTypes())){
+                
+            return TRUE;
+        }
+        $this->addError($this->messaisValidgeTemplates[self::invalidFileType]);
+		return FALSE;
+	} 
+
+
+}
+
+<?
+```
+The class we extended, baseConstraint declares `setOptions` and `isValid` as abstract functions!
+So we created `setOptions` which check value part of array sets those mime types to be excluded!
+The function isValid checks if file is valid!
+
+#### Using Out ExcludeMimeTypeConstraint Class
+```php
+$up = new FileUpload("path/to/upload/directory");
+$up->registerConstraintNamespace('exlude','My\Namespace\ExcludeMimeTypeConstraint');
+$up->setConstraints(array(
+    'exlude' => array(
+        "value"=>array("mime-type1","mime-type2"),
+    ),
+));
+```
+
+If we declare, setOptions as 
+```php
+    public function setOptions($options){
+
+			$this->setMimeTypes($options);
+
+    }
+```
+Then we have use `setConstraints` as ::
+```php
+$up->setConstraints(array(
+    'exlude' => array("mime-type1","mime-type2"),
+
+));
+```
+
 ### Autoloader
 The library adopts the <a href='https://gist.github.com/1234504'>PSR-0</a> namespace convention. This means you can use any autoloader that can handle the convention. You can also use the autoloader that comes with the library:
 ```php
@@ -221,4 +313,3 @@ require_once 'path/to/lib/Faultier/FileUpload/Autoloader.php';
 Faultier\FileUpload\Autoloader::register();
 ?>
 ```
-
