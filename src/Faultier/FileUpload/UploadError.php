@@ -12,19 +12,27 @@
     const ERR_CONSTRAINT = 2;
   
     private $type;
-    private $message;
+    private $messages=array();
     private $file;
     private $constraint;
     
     private $availableTypes = array(
-      UploadError::ERR_PHP_UPLOAD,
-      UploadError::ERR_FILESYSTEM,
-      UploadError::ERR_CONSTRAINT
+      self::ERR_PHP_UPLOAD,
+      self::ERR_FILESYSTEM,
+      self::ERR_CONSTRAINT
     );
     
-    public function __construct($type, $messsage, File $file = null, ConstraintInterface $constraint = null) {
+    public function __construct($type, $message=NULL, File $file = null, ConstraintInterface $constraint = null) {
       $this->setType($type);
-      $this->setMessage($messsage);
+      if($message!=NULL){
+          if(is_array($message)){
+              $this->setMessages($message);
+          }else{
+              $this->setMessage($message);
+          }          
+      }
+
+      
       $this->file = $file;
       $this->constraint = $constraint;
     }
@@ -42,11 +50,15 @@
     }
     
     public function setMessage($message) {
-      $this->message = $message;
+      $this->messages[] = $message;
+    }
+
+    public function setMessages($messages){
+        $this->messages=$messages;
     }
     
-    public function getMessage() {
-      return $this->message;
+    public function getMessages() {
+      return $this->messages;
     }
     
     public function setFile(File $file) {
