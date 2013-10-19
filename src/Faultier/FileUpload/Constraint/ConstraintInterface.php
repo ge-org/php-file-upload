@@ -1,15 +1,13 @@
 <?php
 
-	namespace Faultier\FileUpload\Constraint;
+namespace Faultier\FileUpload\Constraint;
 	
-	use Faultier\FileUpload\File;
+use Faultier\FileUpload\File;
 	
-	interface ConstraintInterface {
+interface ConstraintInterface {
 	
-		public function getConstraintType();
-	
-		public function parse($options);
-		public function holds(File $file);
-	}
+	public function setOptions($options);
+	public function isValid(File $file);
 
-?>
+    public function getErrors();
+}
