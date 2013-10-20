@@ -122,36 +122,35 @@ class SizeConstraint extends baseConstraint {
 		switch ($this->getMode()) {
 			case self::LESS:
 				$valid = ($file->getSize() < $this->getSize());
-                $message=$this->messageTemplates[self::fileIsLarger];
+                $message_key = self::fileIsLarger;
 				break;
 					
 			case self::EQUAL:
 				$valid = ($file->getSize() == $this->getSize());
-                $message=$this->messageTemplates[self::fileIsNotEqual];
+                $message_key = self::fileIsNotEqual;
 				break;
 
 			case self::GREATER:
 				$valid = ($file->getSize() > $this->getSize());
-                $message=$this->messageTemplates[self::fileIsSmaller];
+                $message_key = self::fileIsSmaller;
 				break;
 					
 			case self::LESS_EQUAL:
 				$valid = ($file->getSize() <= $this->getSize());
+                $message_key = self::fileIsLarger;
                 $message=$this->messageTemplates[self::fileIsLarger];
 				break;
 					
 			case self::GREATER_EQUAL:
                 $valid = ($file->getSize() >= $this->getSize());
-				$message=$this->messageTemplates[self::fileIsSmaller];
+                $message_key = self::fileIsSmaller;
 				break;
 		}
         if(!$valid){
-            $messageTemplate=$message;
-            $this->addError($messageTemplate);
+            $this->addErrorMessage($message_key);
         }
 		return $valid;
 	}
 		
 }
 
-?>
