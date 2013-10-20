@@ -42,68 +42,30 @@ class ImageConstraint extends baseConstraint{
     **  @param imageMimeTypes  -- mime types of all types of images for advanced images
     */
     protected $imageMimeTypes = array(
-        'application/cdf',
-        'application/dicom',
-        'application/fractals',
-        'application/postscript',
-        'application/vnd.hp-hpgl',
-        'application/vnd.oasis.opendocument.graphics',
-        'application/x-cdf',
-        'application/x-cmu-raster',
-        'application/x-ima',
-        'application/x-inventor',
-        'application/x-koan',
-        'application/x-portable-anymap',
-        'application/x-world-x-3dmf',
-        'image/bmp',
-        'image/c',
-        'image/cgm',
-        'image/fif',
-        'image/gif',
-        'image/jpeg',
-        'image/jpm',
-        'image/jpx',
-        'image/jp2',
-        'image/naplps',
-        'image/pjpeg',
-        'image/png',
-        'image/svg',
-        'image/svg+xml',
-        'image/tiff',
-        'image/vnd.adobe.photoshop',
-        'image/vnd.djvu',
-        'image/vnd.fpx',
-        'image/vnd.net-fpx',
-        'image/x-cmu-raster',
-        'image/x-cmx',
-        'image/x-coreldraw',
-        'image/x-cpi',
-        'image/x-emf',
-        'image/x-ico',
-        'image/x-icon',
-        'image/x-jg',
-        'image/x-ms-bmp',
-        'image/x-niff',
-        'image/x-pict',
-        'image/x-pcx',
-        'image/x-png',
-        'image/x-portable-anymap',
-        'image/x-portable-bitmap',
-        'image/x-portable-greymap',
-        'image/x-portable-pixmap',
-        'image/x-quicktime',
-        'image/x-rgb',
-        'image/x-tiff',
-        'image/x-unknown',
-        'image/x-windows-bmp',
-        'image/x-xpmi',
+        self::validationLevelAdvanced=>array(
+            IMAGETYPE_GIF,
+            IMAGETYPE_JPEG,
+            IMAGETYPE_PNG,
+            IMAGETYPE_SWF,
+            IMAGETYPE_PSD,
+            IMAGETYPE_BMP,
+            IMAGETYPE_TIFF_II ,
+            IMAGETYPE_TIFF_MM,
+            IMAGETYPE_JP2,
+            IMAGETYPE_JPX,
+            IMAGETYPE_JB2,
+            IMAGETYPE_SWC,
+            IMAGETYPE_IFF,
+            IMAGETYPE_WBMP,
+            IMAGETYPE_XBM,
+            IMAGETYPE_ICO        
+        ),self::validationLevelSimple=>array(
+            IMAGETYPE_GIF,
+            IMAGETYPE_JPEG,
+            IMAGETYPE_PNG,        
+        )
+
     );
-
-
-    public function __construct(){
-        
-     
-    }
     
     /*
     **  @function getImageExtensions    --  returns property,$this->imageExtensions
@@ -160,33 +122,22 @@ class ImageConstraint extends baseConstraint{
     **                  2)user wants just opposite(everything except image) and uploaded file is not image
     */    
     public function isValid(File $file){
-        if($this->validationLevel==self::validationLevelSimple){
-            $this->validator=new TypeConstraint();
-            $this->validator->setFileTypes($this->imageExtensions);            
-        }else{
-
-            $this->validator=new MimeTypeConstraint();
-            $this->validator->setMimeTypes($this->imageMimeTypes);            
-        }
-
+        $file_type=\exif_imagetype($file->getTemporaryName());
         if($this->isImage){
-            if(!$this->validator->isValid($file)){
-                $this->addError($this->messageTemplates['fileIsNotImage']);
-                return FALSE;
+            if(!in_array($file_type,$this->imageMimeTypes[$this->validationLevel])){
+                 $this->addError($this->messageTemplates['fileIsNotImage']);
+                return FALSE;               
             }
             return TRUE;
         }else{
-            if($this->validator->isValid($file)){
-                $this->addError($this->messageTemplates['fileIsImage']);
-                return FALSE;
+            if(in_array($file_type,$this->imageMimeTypes[$this->validationLevel])){
+                 $this->addError($this->messageTemplates['fileIsImage']);
+                return FALSE;               
             }
             return TRUE;            
         }
 
     }
     
-    public function getConstraintType(){
-        return "Image";
-    }
          
 }
