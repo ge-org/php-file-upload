@@ -66,13 +66,13 @@ $fileUploader->addConstraints(array(
 );
 ```
 ####### Options
-<ul>
+
 * < (less)
 * = (equal)
 * > (greater)
-* < (less)
-* < (less)
-</ul>
+* <= (less equal)
+* >= (greater equal)
+
 
 
 ##### Validation by Mime Type
