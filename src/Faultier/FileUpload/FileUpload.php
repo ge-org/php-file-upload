@@ -15,7 +15,6 @@ class FileUpload {
 	private $constraints = array();
 	private $constraintNamespaces = array();
 	private $uploadDirectory = null;
-	private $isMultiFileUpload = false;
 	private $errorClosure = null;
     protected $allowedFields=array();
 
@@ -62,7 +61,10 @@ class FileUpload {
     **  @function setAllowedFields -- sets fields that are to be uploaded
     **  @param array $allowedFields --  fields that are to be uploaded
     */
-    public function setAllowedFields(array $allowedFields=array()){
+    public function setAllowedFields($allowedFields=array()){
+        if(!is_array($allowedFields)){
+            $allowedFields=array($allowedFields);
+        }
         $this->allowedFields=$allowedFields;
     }
 
@@ -74,7 +76,7 @@ class FileUpload {
 		* Registers the namespace and the alias of a constraint class.
 		*
 		* <code>
-		* $up->registerConstraintNamespace('My\Company\FooConstraint', 'foo');
+		* $up->registerConstraintNamespace('foo',''My\Company\FooConstraint'');
 		* </code>
 		*
 		* @param string  $alias      The alias of the constraint
@@ -176,9 +178,9 @@ class FileUpload {
 		* @throws \BadMethodCallException If the upload is a multi file upload {@link isMultiFileUpload}
 		*/
 	public function getFile($fieldName) {
-		if ($this->isMultiFileUpload()) {
+		if ($this->isMultiFileUpload($fieldName)) {
 			throw new \BadMethodCallException('This is a multi file upload. Files cannot be distinguished by their field name.');
-		} else if (!isset($this->files[$fieldName])) {
+		} elseif (!isset($this->files[$fieldName])) {
 			throw new \InvalidArgumentException('The file does not exist');
 		} else {
 			return $this->files[$fieldName];
@@ -271,15 +273,14 @@ class FileUpload {
 		* A multi file upload is a kind of uplaod where the HTML file tags are named all the same.
 		* Here is an example:
 		* <code>
-		* <input type="file" name="foo[]" />
-		* <input type="file" name="foo[]" />
+		* <input type="file" name="foo[]" multiple />
 		* ...
 		* </code>
 		*
 		* @return bool True if it is a multi file upload, otherwise false
 		*/
-	public function isMultiFileUpload() {
-		return $this->isMultiFileUpload;
+	public function isMultiFileUpload($fieldName) {
+		return is_array($_FILES[$fieldName]['name']);
 	}
 		
 	/**
@@ -342,10 +343,7 @@ class FileUpload {
             if(!in_array($field,$this->allowedFields)){
                 continue;
             }
-			
-			// multi file upload
-			$this->isMultiFileUpload = is_array($uploadedFile['name']);
-			if ($this->isMultiFileUpload()) {
+			if ($this->isMultiFileUpload($field)) {
 				$this->parseFilesArrayMultiUpload($field, $uploadedFile);
 			}
 				
@@ -379,6 +377,7 @@ class FileUpload {
 			$file->setSize($uploadedFile['size'][$i]);
 			$file->setErrorCode($uploadedFile['error'][$i]);
 			$file->setFieldName($field);
+            $file->setMultiFileUpload();
 				
 			$this->files[$field.$i] = $file;
 		}
@@ -501,7 +500,10 @@ class FileUpload {
     public function addSaveCallback($callback){
         if(is_callable($callback)){
             $this->saveCallbacks[]=$callback;
-        }
+        }else{
+            throw new \InvalidArgumentException("The callback provided is not callable!");
+        } 
+        
     }
 		
 	/**
