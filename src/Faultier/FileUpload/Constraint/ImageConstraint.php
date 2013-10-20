@@ -39,7 +39,7 @@ class ImageConstraint extends baseConstraint{
     protected $validationLevel=self::validationLevelSimple;
 
     /*
-    **  @param imageMimeTypes  -- mime types of all types of images for advanced images
+    **  @param imageMimeTypes  -- mime types of all types of images for advanced and simple images
     */
     protected $imageMimeTypes = array(
         self::validationLevelAdvanced=>array(
@@ -92,6 +92,10 @@ class ImageConstraint extends baseConstraint{
         }    
     }
     
+    /*
+    **  @function setOptions used to set Options
+    **  @param $options --  Options
+    */
     public function setOptions($options){
         if(isset($options['value'])){
             $this->isImage($options['value']);
@@ -103,8 +107,11 @@ class ImageConstraint extends baseConstraint{
         
     }
 
+    /*
+    **  @function setValidationLevel    -- used to set simple or advanced level validation
+    */
     public function setValidationLevel($level){
-        $this->validationLevel=strtolower($level);
+        $this->validationLevel = strtolower($level);
     }
 
     /*
@@ -125,13 +132,13 @@ class ImageConstraint extends baseConstraint{
         $file_type=\exif_imagetype($file->getTemporaryName());
         if($this->isImage){
             if(!in_array($file_type,$this->imageMimeTypes[$this->validationLevel])){
-                 $this->addError($this->messageTemplates['fileIsNotImage']);
+                 $this->addErrorMessage(self::fileIsNotImage);
                 return FALSE;               
             }
             return TRUE;
         }else{
             if(in_array($file_type,$this->imageMimeTypes[$this->validationLevel])){
-                 $this->addError($this->messageTemplates['fileIsImage']);
+                 $this->addErrorMessage(self::fileIsImage);
                 return FALSE;               
             }
             return TRUE;            
@@ -141,3 +148,4 @@ class ImageConstraint extends baseConstraint{
     
          
 }
+
