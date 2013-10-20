@@ -96,6 +96,9 @@ abstract class baseConstraint implements ConstraintInterface{
                 $this->setMessages($options['messages']);
             }          
 		}
+
+
+        abstract protected  function setOptions($options);
     
 }
 ?>
