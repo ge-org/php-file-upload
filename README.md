@@ -220,88 +220,8 @@ $up->setConstraints(array(
 ));
 ?>
 ```
+You can find more details on this <a href='https://github.com/ojhaujjwal/php-file-upload/wiki/Creating-Custom-Constraints'>page</a> on creating custom constraints!
 
-#### Detail Example of Custom Constraints
-
-Lets create ExcludeMimeTypeConstraint to disallow certain mime types::
-
-```php
-ExcludeMimeTypeConstraint.php
-
-<?php
-namespace My\Namespace;
-
-use Faultier\FileUpload\Constraint\baseConstraint;
-use Faultier\FileUpload\File;
-
-class ExcludeMimeTypeConstraint extends baseConstraint {
-
-    // mime types that are not allowed
-    protected $types=array();
-
-    const invalidFileType="invalidFileType";
-
-    protected $messageTemplates=array(
-        self::invalidFileType=>"Invalid File Type",
-    );
-
-    public function setMimeTypes(array $types=array()) {
-		$this->types = $types;
-	}
-		
-	public function getMimeTypes() {
-		return $this->types;
-	}
-
-    public function setOptions($options){
-		if(isset($options['value'])){
-			$this->setMimeTypes($options['value']);
-		}
-    }
-
-	public function isValid(File $file) {
-            
-        if(!in_array($file->getMimeType(),$this->getMimeTypes())){
-                
-            return TRUE;
-        }
-        $this->addError($this->messaisValidgeTemplates[self::invalidFileType]);
-		return FALSE;
-	} 
-
-
-}
-
-<?
-```
-The class we extended, baseConstraint declares `setOptions` and `isValid` as abstract functions!
-So we created `setOptions` which check value part of array sets those mime types to be excluded!
-The function isValid checks if file is valid!
-
-#### Using Out ExcludeMimeTypeConstraint Class
-```php
-$up = new FileUpload("path/to/upload/directory");
-$up->registerConstraintNamespace('exlude','My\Namespace\ExcludeMimeTypeConstraint');
-$up->setConstraints(array(
-    'exlude' => array(
-        "value"=>array("mime-type1","mime-type2"),
-    ),
-));
-```
-
-If we declare, setOptions as 
-```php
-public function setOptions($options){
-    $this->setMimeTypes($options);
-}
-```
-Then we can use `setConstraints` as 
-```php
-$up->setConstraints(array(
-    'exlude' => array("mime-type1","mime-type2"),
-
-));
-```
 
 ### Autoloader
 The library adopts the <a href='https://gist.github.com/1234504'>PSR-0</a> namespace convention. This means you can use any autoloader that can handle the convention. You can also use the autoloader that comes with the library:
