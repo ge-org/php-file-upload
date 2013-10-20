@@ -4,17 +4,16 @@ php-file-upload
 100% Object Oriented PHP File Upload Library
 
 #Why use it:
-<ul>
-  <li>Object Oriented and Easy-to-Use</li>
-  <li>Very PowerFull File Validation</li>
-  <li>Customizable File Validation</li>
-  <li>Event handing(Error,Save etc.) with Closures</li>  
-</ul>
+
+* Object Oriented and Easy-to-Use
+* Very PowerFull File Validation
+* Customizable File Validation
+* Event handing(Error,Save etc.) with Closures  
+
 
 #Requirements
-<ul>
-  <li>PHP version 5.3.3 or later</li>
-</ul>
+* PHP version 5.3.3 or later
+* PHP Exif Extension to validate image
 
 
 #Usage
@@ -80,7 +79,7 @@ $fileUploader->addConstraints(array(
 ```php
 $fileUploader->addConstraints(array(
             "mime-type"=>array(
-                "value"=>array("application/vnd.ms-excel","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+                "value"=>array("application/vnd.ms-excel"),
             ) 
     )              
 );
