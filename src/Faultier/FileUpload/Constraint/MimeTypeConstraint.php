@@ -35,12 +35,10 @@ class MimeTypeConstraint  extends baseConstraint
 		}
 		
 		public function isValid(File $file) {
-            
             if(in_array($file->getMimeType(),$this->getMimeTypes())){
-                
                 return TRUE;
             }
-            $this->addError($this->messageTemplates[self::invalidFileType]);
+            $this->addErrorMessage(self::invalidFileType);
 			return FALSE;
 		}    
 }
