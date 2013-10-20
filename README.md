@@ -291,13 +291,11 @@ $up->setConstraints(array(
 
 If we declare, setOptions as 
 ```php
-    public function setOptions($options){
-
-			$this->setMimeTypes($options);
-
-    }
+public function setOptions($options){
+    $this->setMimeTypes($options);
+}
 ```
-Then we have use `setConstraints` as ::
+Then we can use `setConstraints` as 
 ```php
 $up->setConstraints(array(
     'exlude' => array("mime-type1","mime-type2"),
