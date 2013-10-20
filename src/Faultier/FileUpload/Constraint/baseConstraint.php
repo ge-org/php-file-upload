@@ -98,7 +98,19 @@ abstract class baseConstraint implements ConstraintInterface{
 		}
 
 
+        /*
+        **  @function addErrorMessage   -- used to add error message from property, $this->messageTemplates
+        */
+        public function addErrorMessage($message_key){
+            if(!isset($this->messageTemplates[$message_key])){
+                throw new \Exception("Message Template does not Exists!");
+            }else{
+                $this->addError($this->messageTemplates[$message_key]);
+            }
+        }
+
+
         abstract protected  function setOptions($options);
     
 }
-?>
+
