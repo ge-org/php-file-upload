@@ -6,9 +6,7 @@ use Faultier\FileUpload\File;
 use Faultier\FileUpload\UploadError;
 use Faultier\FileUpload\Constraint\ConstraintInterface;
 	
-/**
-	* @link https://gist.github.com/1258900
-	*/
+
 class FileUpload {
 	
 	private $files = array();
@@ -37,18 +35,21 @@ class FileUpload {
 		* @see setUploadDirectory
 		* @see addConstraints
 		*/
-	public function __construct($uploadDirectory, array $constraints = array(),$allowedFields=array()) {
+	public function __construct($uploadDirectory = null, array $constraints = array(),$allowedFields=array()) {
 		
 		$this->registerConstraintNamespace('size', '\Faultier\FileUpload\Constraint\SizeConstraint');
         $this->registerConstraintNamespace('mime-type', '\Faultier\FileUpload\Constraint\MimeTypeConstraint');
 		$this->registerConstraintNamespace('type', '\Faultier\FileUpload\Constraint\TypeConstraint');
         $this->registerConstraintNamespace('image', '\Faultier\FileUpload\Constraint\ImageConstraint');
 		
-		$this->setUploadDirectory($uploadDirectory);
+        if ($uploadDirectory != null) {
+            $this->setUploadDirectory($uploadDirectory);    
+        }
+		
 		$this->addConstraints($constraints);
-		if(empty($allowedFields)){
+		if (empty($allowedFields)) {
 			$this->setAllFields();
-		}else{
+		} else {
             $allowedFields=(array) $allowedFields;
 			$this->setAllowedFields($allowedFields);
 		}
@@ -308,6 +309,20 @@ class FileUpload {
 	public function getNotUploadedFiles() {
 		return array_intersect($this->getFiles(), $this->getUploadedFiles());
 	}
+
+    /*
+    **  checks if upload was successfull
+    **  returns true if successfull else false
+    */
+    public function wasUploadSuccessfull(){
+		foreach ($this->getFiles() as $file) {
+			if (!$file->isUploaded()) {
+				return FALSE;
+
+			}
+		}
+        return TRUE;
+    }
 		
 	/**
 		* Returns the aggregated file size of all files in bytes.
