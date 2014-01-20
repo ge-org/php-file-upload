@@ -1,55 +1,60 @@
 <?php
 
-	namespace Faultier\FileUpload\Constraint;
-	
-	use \Faultier\FileUpload\File;
+    namespace Faultier\FileUpload\Constraint;
 
-	
-	class TypeConstraint extends baseConstraint {
-        
+    use \Faultier\FileUpload\File;
+
+    class TypeConstraint extends baseConstraint
+    {
         const invalidFileType="invalidFileType";
-        
-        // instance of Class,MimeTypeConstraint 
+
+        // instance of Class,MimeTypeConstraint
         protected $MimeTypeConstraint;
 
         protected $messageTemplates=array(
             self::invalidFileType=>"Invalid File Type",
         );
 
-        function __construct(){
+        function __construct()
+        {
             $this->MimeTypeConstraint=new MimeTypeConstraint();
 
         }
 
-        public function getConstraintType(){
+        public function getConstraintType()
+        {
             return "type";
         }
 
-        public function setOptions($options){
-			if(isset($options['value'])){
-			    $this->setFileTypes($options['value']);
-			}
-        }
-
-        public function setFileTypes($fileTypes){
-            $mime_types=array();
-            foreach($fileTypes as $type){
-                if(isset($this->mime_types_map[$type])){
-                    $mime_types[]=$this->mime_types_map[$type];    
-                }
-                
+        public function setOptions($options)
+        {
+            if (isset($options['value'])) {
+                $this->setFileTypes($options['value']);
             }
-            $this->MimeTypeConstraint->setMimeTypes($mime_types);            
         }
 
-        public function isValid(File $file){
-            if(!$this->MimeTypeConstraint->isValid($file)){
+        public function setFileTypes($fileTypes)
+        {
+            $mime_types=array();
+            foreach ($fileTypes as $type) {
+                if (isset($this->mime_types_map[$type])) {
+                    $mime_types[]=$this->mime_types_map[$type];
+                }
+
+            }
+            $this->MimeTypeConstraint->setMimeTypes($mime_types);
+        }
+
+        public function isValid(File $file)
+        {
+            if (!$this->MimeTypeConstraint->isValid($file)) {
                 $this->addError($this->messageTemplates[self::invalidFileType]);
+
                 return FALSE;
             }
+
             return TRUE;;
         }
-
 
         protected $mime_types_map = array(
           '123' => 'application/vnd.lotus-1-2-3',
@@ -1050,7 +1055,4 @@
           'zmm' => 'application/vnd.handheld-entertainment+xml'
         );
 
-
-	}
-
-?>
+    }

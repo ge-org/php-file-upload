@@ -1,11 +1,11 @@
 <?php
 
 namespace Faultier\FileUpload\Constraint;
-	
+
 use \Faultier\FileUpload\File;
 
-class ImageConstraint extends baseConstraint{
-
+class ImageConstraint extends baseConstraint
+{
     const fileIsNotImage="fileIsNotImage";
 
     const fileIsImage="fileIsImage";
@@ -24,7 +24,7 @@ class ImageConstraint extends baseConstraint{
     protected $isImage=TRUE;
     /*
     **  @param $validator
-    **  instance of class, TypeConstraint or MimeType,Constraint; 
+    **  instance of class, TypeConstraint or MimeType,Constraint;
     */
     protected $validator;
 
@@ -32,9 +32,6 @@ class ImageConstraint extends baseConstraint{
         self::fileIsNotImage=>"The uploaded file is not a valid image!",
         self::fileIsImage=>"The uploaded file is a image!",
     );
-
-
-
 
     protected $validationLevel=self::validationLevelSimple;
 
@@ -58,68 +55,72 @@ class ImageConstraint extends baseConstraint{
             IMAGETYPE_IFF,
             IMAGETYPE_WBMP,
             IMAGETYPE_XBM,
-            IMAGETYPE_ICO        
+            IMAGETYPE_ICO
         ),self::validationLevelSimple=>array(
             IMAGETYPE_GIF,
             IMAGETYPE_JPEG,
-            IMAGETYPE_PNG,        
+            IMAGETYPE_PNG,
         )
 
     );
-    
+
     /*
     **  @function getImageExtensions    --  returns property,$this->imageExtensions
     */
-    public function getImageExtensions(){
+    public function getImageExtensions()
+    {
         return $this->imageExtensions();
-    } 
-    
+    }
 
     /*
     **  @function addImageExtension    --  adds one image extension
     */
-    public function addImageExtension($extension){
+    public function addImageExtension($extension)
+    {
         $this->imageExtensions[]=$extension;
     }
-
 
     /*
     **  @function addImageExtensions    --  adds one or more image extension
     */
-    public function addImageExtensions($extensions){
-        foreach($extensions as $extension){
+    public function addImageExtensions($extensions)
+    {
+        foreach ($extensions as $extension) {
             $this->addImageExtension($extension);
-        }    
+        }
     }
-    
+
     /*
     **  @function setOptions used to set Options
     **  @param $options --  Options
     */
-    public function setOptions($options){
-        if(isset($options['value'])){
+    public function setOptions($options)
+    {
+        if (isset($options['value'])) {
             $this->isImage($options['value']);
         }
 
-        if(isset($options['validation-level'])){
+        if (isset($options['validation-level'])) {
             $this->setValidationLevel($options['validation-level']);
         }
-        
+
     }
 
     /*
     **  @function setValidationLevel    -- used to set simple or advanced level validation
     */
-    public function setValidationLevel($level){
+    public function setValidationLevel($level)
+    {
         $this->validationLevel = strtolower($level);
     }
 
     /*
     **  @function isImage    --  sets if user wants image or just opposite(everything except image)
-    */    
-    public function isImage($isImage){
+    */
+    public function isImage($isImage)
+    {
         $this->isImage=(bool) $isImage;
-    } 
+    }
 
     /*
     **  @function isValid    --  checks if uploaded file is valid
@@ -127,25 +128,28 @@ class ImageConstraint extends baseConstraint{
     **  returns true if
     **                  1)user wants image and uploaded file is image
     **                  2)user wants just opposite(everything except image) and uploaded file is not image
-    */    
-    public function isValid(File $file){
+    */
+    public function isValid(File $file)
+    {
         $file_type=\exif_imagetype($file->getTemporaryName());
-        if($this->isImage){
-            if(!in_array($file_type,$this->imageMimeTypes[$this->validationLevel])){
+        if ($this->isImage) {
+            if (!in_array($file_type,$this->imageMimeTypes[$this->validationLevel])) {
                  $this->addErrorMessage(self::fileIsNotImage);
-                return FALSE;               
+
+                return FALSE;
             }
+
             return TRUE;
-        }else{
-            if(in_array($file_type,$this->imageMimeTypes[$this->validationLevel])){
+        } else {
+            if (in_array($file_type,$this->imageMimeTypes[$this->validationLevel])) {
                  $this->addErrorMessage(self::fileIsImage);
-                return FALSE;               
+
+                return FALSE;
             }
-            return TRUE;            
+
+            return TRUE;
         }
 
     }
-    
-         
-}
 
+}
